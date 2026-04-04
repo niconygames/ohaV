@@ -158,23 +158,44 @@ async function copyToClipboard(text) {
 /* ------------------------------------------
    X 検索ボタン
    ------------------------------------------ */
+
+// since:YYYY-MM-DD 用の日付文字列を返す（daysAgo=1 で昨日）
+function getSinceDate(daysAgo = 1) {
+  const d = new Date();
+  d.setDate(d.getDate() - daysAgo);
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${y}-${m}-${day}`;
+}
+
 function setupSearchButtons() {
-  // おはVサーチ（ファボ少なめ: 0〜5）
+  // ゆるめ版: 30いいね以上＋昨日以降
   const btnLow = document.getElementById('search-low-faves');
   if (btnLow) {
     btnLow.addEventListener('click', () => {
-      const faves = Math.floor(Math.random() * 6); // 0-5
-      const q = `#おはV min_faves:${faves}`;
+      const since = getSinceDate(1);
+      const q = `#おはようVtuber素材 min_faves:30 since:${since}`;
       openXSearch(q);
     });
   }
 
-  // おはVサーチ（ファボ多め: 10〜50）
+  // 人気寄り: 複合タグ 40いいね以上＋昨日以降
   const btnHigh = document.getElementById('search-high-faves');
   if (btnHigh) {
     btnHigh.addEventListener('click', () => {
-      const faves = Math.floor(Math.random() * 41) + 10; // 10-50
-      const q = `#おはV min_faves:${faves}`;
+      const since = getSinceDate(1);
+      const q = `(#おはようVtuber素材 OR #おはV素材 OR #おはようVライバー素材) min_faves:40 since:${since}`;
+      openXSearch(q);
+    });
+  }
+
+  // 画像絞り込み最新版
+  const btnImages = document.getElementById('search-images');
+  if (btnImages) {
+    btnImages.addEventListener('click', () => {
+      const since = getSinceDate(1);
+      const q = `(#おはようVtuber素材 OR #Vtuber素材 OR #おはV素材) filter:images since:${since} -filter:replies`;
       openXSearch(q);
     });
   }

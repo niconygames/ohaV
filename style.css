@@ -421,6 +421,9 @@ body::before {
 .btn-search-high {
   border-left: 3px solid #ec4899;
 }
+.btn-search-images {
+  border-left: 3px solid #06b6d4;
+}
 .btn-search-oyav {
   border-left: 3px solid #6366f1;
 }
