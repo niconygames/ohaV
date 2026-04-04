@@ -1,0 +1,20 @@
+{
+  "name": "おはVサーチ！",
+  "short_name": "おはVサーチ",
+  "description": "VTuber向けおはよう挨拶支援ツール",
+  "start_url": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0f0f1e",
+  "theme_color": "#a855f7",
+  "lang": "ja",
+  "icons": [
+    {
+      "src": "ClipForge.ico",
+      "sizes": "any",
+      "type": "image/x-icon",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["utilities", "social"]
+}

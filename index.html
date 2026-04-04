@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="VTuber向けおはよう挨拶支援ツール。今日の記念日タグ・X検索・BOOTH素材検索を一括サポート！">
+  <title>おはVサーチ！</title>
+  <link rel="manifest" href="manifest.json">
+  <link rel="icon" href="ClipForge.ico">
+  <link rel="apple-touch-icon" href="ClipForge.ico">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div id="toast" class="toast"></div>
+
+  <header class="site-header">
+    <div class="header-inner">
+      <h1 class="site-title">おはVサーチ！</h1>
+      <p class="site-subtitle">VTuber向け おはよう挨拶支援ツール</p>
+    </div>
+  </header>
+
+  <main class="container">
+
+    <!-- ① 今日は何の日セクション -->
+    <section class="card section-today" id="section-today">
+      <div class="section-header">
+        <span class="section-icon">🌅</span>
+        <h2 class="section-title">今日は何の日？</h2>
+      </div>
+      <p id="today-date" class="today-date">読み込み中...</p>
+      <div class="anniversary-box">
+        <p class="anniversary-label">今日の記念日</p>
+        <p id="anniversary-name" class="anniversary-name">...</p>
+      </div>
+
+      <div class="tags-area">
+        <div class="tags-group">
+          <p class="tags-group-label">記念日タグ</p>
+          <div id="anniversary-tags" class="tags-list">
+            <!-- JSで動的生成 -->
+          </div>
+        </div>
+
+        <div class="tags-group">
+          <p class="tags-group-label">定番タグ</p>
+          <div class="tags-list" id="default-tags">
+            <label class="tag-checkbox">
+              <input type="checkbox" value="#おはようVtuber" checked>
+              <span>#おはようVtuber</span>
+            </label>
+            <label class="tag-checkbox">
+              <input type="checkbox" value="#おはV" checked>
+              <span>#おはV</span>
+            </label>
+            <label class="tag-checkbox">
+              <input type="checkbox" value="#おはようVライバー" checked>
+              <span>#おはようVライバー</span>
+            </label>
+            <label class="tag-checkbox">
+              <input type="checkbox" value="#Vtuberと繋がりたい">
+              <span>#Vtuberと繋がりたい</span>
+            </label>
+            <label class="tag-checkbox">
+              <input type="checkbox" value="#新人Vtuber">
+              <span>#新人Vtuber</span>
+            </label>
+            <label class="tag-checkbox">
+              <input type="checkbox" value="#Vtuber準備中">
+              <span>#Vtuber準備中</span>
+            </label>
+            <label class="tag-checkbox">
+              <input type="checkbox" value="#Vtuberはじめました">
+              <span>#Vtuberはじめました</span>
+            </label>
+            <label class="tag-checkbox">
+              <input type="checkbox" value="#Vtuber好きさんと繋がりたい">
+              <span>#Vtuber好きさんと繋がりたい</span>
+            </label>
+            <label class="tag-checkbox">
+              <input type="checkbox" value="#VTuber">
+              <span>#VTuber</span>
+            </label>
+          </div>
+        </div>
+      </div>
+
+      <div class="copy-area">
+        <div id="copy-preview" class="copy-preview">タグを選択してください</div>
+        <button id="copy-btn" class="btn btn-primary btn-copy">
+          <span class="btn-icon">📋</span> タグをまとめてコピー
+        </button>
+      </div>
+    </section>
+
+    <!-- ② X検索セクション -->
+    <section class="card section-search" id="section-search">
+      <div class="section-header">
+        <span class="section-icon">🔍</span>
+        <h2 class="section-title">おはV・おやVサーチ</h2>
+      </div>
+      <p class="section-desc">クリックすると X (Twitter) で検索が開きます</p>
+
+      <div class="search-buttons">
+        <button id="search-low-faves" class="btn btn-search btn-search-low">
+          <span class="btn-icon">🌸</span>
+          <span class="btn-label">おはVサーチ</span>
+          <span class="btn-sub">ファボ少なめ（新人さん向け）</span>
+        </button>
+        <button id="search-high-faves" class="btn btn-search btn-search-high">
+          <span class="btn-icon">✨</span>
+          <span class="btn-label">おはVサーチ</span>
+          <span class="btn-sub">ファボ多め（人気投稿向け）</span>
+        </button>
+        <button id="search-oyav" class="btn btn-search btn-search-oyav">
+          <span class="btn-icon">🌙</span>
+          <span class="btn-label">おやVサーチ</span>
+          <span class="btn-sub">夜の挨拶を探す</span>
+        </button>
+      </div>
+
+      <p class="search-note">
+        ※ ファボ数はランダムで変動します。同じボタンを押すたびに違う結果が見つかるかも！
+      </p>
+    </section>
+
+    <!-- ③ BOOTH素材検索セクション -->
+    <section class="card section-booth" id="section-booth">
+      <div class="section-header">
+        <span class="section-icon">🎨</span>
+        <h2 class="section-title">BOOTH素材サーチ</h2>
+      </div>
+      <p class="section-desc">おはV用の素材・テンプレートを探そう</p>
+
+      <div class="booth-buttons">
+        <button id="booth-free" class="btn btn-booth btn-booth-free">
+          <span class="btn-icon">🆓</span>
+          <span class="btn-label">新着おはV 無料サーチ</span>
+          <span class="btn-sub">無料素材をピックアップ</span>
+        </button>
+        <button id="booth-paid" class="btn btn-booth btn-booth-paid">
+          <span class="btn-icon">💎</span>
+          <span class="btn-label">新着おはV 有料サーチ</span>
+          <span class="btn-sub">有料素材をピックアップ</span>
+        </button>
+      </div>
+    </section>
+
+    <!-- ④ リスペクト・ガイドラインセクション -->
+    <section class="card section-guide" id="section-guide">
+      <div class="section-header">
+        <span class="section-icon">💡</span>
+        <h2 class="section-title">リスペクトガイドライン</h2>
+      </div>
+
+      <div class="guide-block">
+        <h3 class="guide-heading">利用前の確認</h3>
+        <ul class="guide-list">
+          <li>いいね・RPをする前に、投稿者のプロフィールや固定ポストを確認しよう</li>
+          <li>「いいね不要」「引用RPお断り」などの表記がある場合は必ず守ること</li>
+          <li>引用RPをする際は、相手を称えるポジティブなコメントを心がけよう</li>
+          <li>無断での切り取り・スクショ共有はトラブルの元になることがあります</li>
+        </ul>
+      </div>
+
+      <div class="guide-block">
+        <h3 class="guide-heading">参考にするときの着眼点チェックリスト</h3>
+        <div class="checklist">
+          <label class="check-item">
+            <input type="checkbox">
+            <span>色使い・全体のトーンは自分のブランドに合う？</span>
+          </label>
+          <label class="check-item">
+            <input type="checkbox">
+            <span>フォント・文字サイズは読みやすい？</span>
+          </label>
+          <label class="check-item">
+            <input type="checkbox">
+            <span>使いやすさ・視認性は高い？</span>
+          </label>
+          <label class="check-item">
+            <input type="checkbox">
+            <span>世界観・キャラクターイメージと合っている？</span>
+          </label>
+          <label class="check-item">
+            <input type="checkbox">
+            <span>タグの組み合わせで届けたいリスナーに届く？</span>
+          </label>
+          <label class="check-item">
+            <input type="checkbox">
+            <span>素材を使う場合、利用規約を確認した？</span>
+          </label>
+        </div>
+      </div>
+    </section>
+
+    <!-- ⑤ プロモーション枠 -->
+    <section class="card section-promo" id="section-promo">
+      <div class="section-header">
+        <span class="section-icon">📢</span>
+        <h2 class="section-title">おすすめツール</h2>
+      </div>
+
+      <div class="promo-tweet">
+        <p class="promo-label">配信者向けおすすめツール</p>
+        <blockquote class="twitter-tweet" data-media-max-width="560">
+          <p lang="ja" dir="ltr">
+            【実況配信者向け】<br>
+            3時間の作業が、わずか5分に?!<br><br>
+            思い立ったらアーカイブ即切り抜き<br>
+            その切れ味、まさに「居合」の如し<br><br>
+            配信者の「見どころ探し」をAIでゼロにする<br>
+            ショート動画作成支援ツール『ClipForge』<br><br>
+            ⚡️ AIが「神シーン」を自動選別<br>
+            ⚡️ 神速カットで画質劣化なし<br>
+            ⚡️…
+            <a href="https://t.co/zbMox84ECs">pic.twitter.com/zbMox84ECs</a>
+          </p>
+          &mdash; nico@youtube (@niconygames)
+          <a href="https://twitter.com/niconygames/status/2038563940956016915?ref_src=twsrc%5Etfw">March 30, 2026</a>
+        </blockquote>
+        <script async src="https://platform.twitter.com/widgets.js" charset="utf-8"></script>
+      </div>
+
+      <div class="promo-booth">
+        <p class="promo-label">BOOTH で販売中</p>
+        <a href="https://nicolove.booth.pm/items/8066339" target="_blank" rel="noopener" class="booth-banner">
+          <div class="booth-banner-inner">
+            <span class="booth-banner-icon">🛍️</span>
+            <div class="booth-banner-text">
+              <span class="booth-banner-title">nicoのBOOTH</span>
+              <span class="booth-banner-desc">nicolove.booth.pm/items/8066339</span>
+            </div>
+            <span class="booth-banner-arrow">→</span>
+          </div>
+        </a>
+      </div>
+    </section>
+
+    <!-- ⑥ Tips -->
+    <section class="card section-tips" id="section-tips">
+      <div class="section-header">
+        <span class="section-icon">⚡</span>
+        <h2 class="section-title">Stream Deck 神速検索 Tips</h2>
+      </div>
+
+      <div class="tips-content">
+        <p class="tips-intro">
+          Stream Deck と組み合わせることで、ワンボタンでおはVサーチを起動できます。
+          配信前の挨拶まわりが劇的に速くなります！
+        </p>
+
+        <div class="tips-step">
+          <div class="tips-step-num">1</div>
+          <div class="tips-step-body">
+            <strong>Stream Deck に「Website」アクションを追加</strong>
+            <p>Elgato Stream Deck アプリを開き、「System」カテゴリから「Website」をドラッグ。</p>
+          </div>
+        </div>
+        <div class="tips-step">
+          <div class="tips-step-num">2</div>
+          <div class="tips-step-body">
+            <strong>このページの URL を登録</strong>
+            <p>URLに「おはVサーチ！」のURLを設定。配信前に1ボタンで即起動。</p>
+          </div>
+        </div>
+        <div class="tips-step">
+          <div class="tips-step-num">3</div>
+          <div class="tips-step-body">
+            <strong>おはVサーチ・おやVサーチもそれぞれ登録</strong>
+            <p>各検索ボタンをブックマーク登録して Stream Deck に追加すると、ページを開かずに直接 X 検索へ飛べます。</p>
+          </div>
+        </div>
+        <div class="tips-step">
+          <div class="tips-step-num">4</div>
+          <div class="tips-step-body">
+            <strong>タグコピーも自動化</strong>
+            <p>ブラウザの拡張機能と組み合わせて、定番タグを自動でクリップボードにコピーするワークフローも作れます。</p>
+          </div>
+        </div>
+
+        <p class="tips-note">
+          💡 スマホ利用の場合はホーム画面に追加（PWA対応）すると、アプリ感覚で使えます！
+        </p>
+      </div>
+    </section>
+
+  </main>
+
+  <footer class="site-footer">
+    <p class="footer-text">
+      <a href="https://x.com/niconygames" target="_blank" rel="noopener">@niconygames</a> &nbsp;|&nbsp;
+      <a href="https://nicolove.booth.pm" target="_blank" rel="noopener">BOOTH</a>
+    </p>
+    <p class="footer-copy">© niconygames</p>
+  </footer>
+
+  <script src="app.js"></script>
+</body>
+</html>
