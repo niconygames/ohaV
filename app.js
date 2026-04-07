@@ -197,9 +197,19 @@ function openXSearch(query) {
   if (/iPhone|iPad|iPod|Android/i.test(navigator.userAgent)) {
     // モバイル：アプリ起動を試み、失敗したらWeb版へフォールバック
     window.location.href = appUrl;
-    setTimeout(() => {
+
+    const timer = setTimeout(() => {
       window.location.href = webUrl;
     }, 1500);
+
+    // アプリが開いてタブが非表示になったらタイマーをキャンセル
+    const onVisibilityChange = () => {
+      if (document.hidden) {
+        clearTimeout(timer);
+        document.removeEventListener('visibilitychange', onVisibilityChange);
+      }
+    };
+    document.addEventListener('visibilitychange', onVisibilityChange);
   } else {
     // PC：新しいタブでWeb版を開く
     const a = document.createElement('a');
