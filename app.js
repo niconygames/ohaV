@@ -190,14 +190,26 @@ function setupSearchButtons() {
 }
 
 function openXSearch(query) {
-  const url = `https://x.com/search?q=${encodeURIComponent(query)}&f=live&src=typed_query`;
-  const a = document.createElement('a');
-  a.href = url;
-  a.target = '_blank';
-  a.rel = 'noopener noreferrer';
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
+  const encoded = encodeURIComponent(query);
+  const webUrl = `https://x.com/search?q=${encoded}&f=live&src=typed_query`;
+  const appUrl = `twitter://search?query=${encoded}`;
+
+  if (/iPhone|iPad|iPod|Android/i.test(navigator.userAgent)) {
+    // モバイル：アプリ起動を試み、失敗したらWeb版へフォールバック
+    window.location.href = appUrl;
+    setTimeout(() => {
+      window.location.href = webUrl;
+    }, 1500);
+  } else {
+    // PC：新しいタブでWeb版を開く
+    const a = document.createElement('a');
+    a.href = webUrl;
+    a.target = '_blank';
+    a.rel = 'noopener noreferrer';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+  }
 }
 
 /* ------------------------------------------
