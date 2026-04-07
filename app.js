@@ -170,44 +170,23 @@ function getSinceDate(daysAgo = 1) {
 }
 
 function setupSearchButtons() {
-  // ゆるめ版: 30いいね以上＋昨日以降
-  const btnLow = document.getElementById('search-low-faves');
-  if (btnLow) {
-    btnLow.addEventListener('click', () => {
-      const since = getSinceDate(1);
-      const q = `#おはようVtuber素材 min_faves:30 since:${since}`;
-      openXSearch(q);
-    });
-  }
+  const base = '(#おはようVtuber素材 OR #おはV素材) filter:images';
+  const suffix = '-filter:replies';
 
-  // 人気寄り: 複合タグ 40いいね以上＋昨日以降
-  const btnHigh = document.getElementById('search-high-faves');
-  if (btnHigh) {
-    btnHigh.addEventListener('click', () => {
-      const since = getSinceDate(1);
-      const q = `(#おはようVtuber素材 OR #おはV素材 OR #おはようVライバー素材) min_faves:40 since:${since}`;
-      openXSearch(q);
-    });
-  }
+  const buttons = [
+    { id: 'search-today-0',     q: () => `${base} since:${getSinceDate(1)} ${suffix}` },
+    { id: 'search-today-5',     q: () => `${base} min_faves:5 since:${getSinceDate(1)} ${suffix}` },
+    { id: 'search-yesterday-5', q: () => `${base} min_faves:5 since:${getSinceDate(2)} ${suffix}` },
+    { id: 'search-yesterday-10',q: () => `${base} min_faves:10 since:${getSinceDate(2)} ${suffix}` },
+    { id: 'search-yesterday-30',q: () => `${base} min_faves:30 since:${getSinceDate(2)} ${suffix}` },
+    { id: 'search-dayb4-20',    q: () => `${base} min_faves:20 since:${getSinceDate(3)} ${suffix}` },
+    { id: 'search-dayb4-40',    q: () => `${base} min_faves:40 since:${getSinceDate(3)} ${suffix}` },
+  ];
 
-  // 画像絞り込み最新版
-  const btnImages = document.getElementById('search-images');
-  if (btnImages) {
-    btnImages.addEventListener('click', () => {
-      const since = getSinceDate(1);
-      const q = `(#おはようVtuber素材 OR #Vtuber素材 OR #おはV素材) filter:images since:${since} -filter:replies`;
-      openXSearch(q);
-    });
-  }
-
-  // おやVサーチ
-  const btnOyav = document.getElementById('search-oyav');
-  if (btnOyav) {
-    btnOyav.addEventListener('click', () => {
-      const q = `(おやすみ OR おやV) #VTuber`;
-      openXSearch(q);
-    });
-  }
+  buttons.forEach(({ id, q }) => {
+    const btn = document.getElementById(id);
+    if (btn) btn.addEventListener('click', () => openXSearch(q()));
+  });
 }
 
 function openXSearch(query) {
@@ -234,6 +213,28 @@ function setupBoothButtons() {
   if (btnPaid) {
     btnPaid.addEventListener('click', () => {
       const keyword = encodeURIComponent('おはV');
+      window.open(
+        `https://booth.pm/ja/search/${keyword}?sort=new_arrivals&min_price=100`,
+        '_blank', 'noopener'
+      );
+    });
+  }
+
+  const btnOyavFree = document.getElementById('booth-oyav-free');
+  if (btnOyavFree) {
+    btnOyavFree.addEventListener('click', () => {
+      const keyword = encodeURIComponent('おやV');
+      window.open(
+        `https://booth.pm/ja/search/${keyword}?sort=new_arrivals&max_price=0`,
+        '_blank', 'noopener'
+      );
+    });
+  }
+
+  const btnOyavPaid = document.getElementById('booth-oyav-paid');
+  if (btnOyavPaid) {
+    btnOyavPaid.addEventListener('click', () => {
+      const keyword = encodeURIComponent('おやV');
       window.open(
         `https://booth.pm/ja/search/${keyword}?sort=new_arrivals&min_price=100`,
         '_blank', 'noopener'

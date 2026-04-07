@@ -97,35 +97,51 @@
     <section class="card section-search" id="section-search">
       <div class="section-header">
         <span class="section-icon">🔍</span>
-        <h2 class="section-title">おはV・おやVサーチ</h2>
+        <h2 class="section-title">おはV素材サーチ</h2>
       </div>
       <p class="section-desc">クリックすると X (Twitter) で検索が開きます</p>
 
-      <div class="search-buttons">
-        <button id="search-low-faves" class="btn btn-search btn-search-low">
-          <span class="btn-icon">🌸</span>
-          <span class="btn-label">おはV素材サーチ　ゆるめ</span>
-          <span class="btn-sub">#おはようVtuber素材 30いいね以上・昨日以降</span>
-        </button>
-        <button id="search-high-faves" class="btn btn-search btn-search-high">
-          <span class="btn-icon">✨</span>
-          <span class="btn-label">おはV素材サーチ　人気寄り</span>
-          <span class="btn-sub">複合タグ 40いいね以上・昨日以降</span>
-        </button>
-        <button id="search-images" class="btn btn-search btn-search-images">
-          <span class="btn-icon">🖼️</span>
-          <span class="btn-label">おはV素材サーチ　画像絞り込み</span>
-          <span class="btn-sub">画像付き投稿のみ・リプ除外</span>
-        </button>
-        <button id="search-oyav" class="btn btn-search btn-search-oyav">
-          <span class="btn-icon">🌙</span>
-          <span class="btn-label">おやVサーチ</span>
-          <span class="btn-sub">夜の挨拶を探す</span>
-        </button>
+      <div class="search-group">
+        <p class="search-group-label">■ 今日の超新着（一番新しい素材）</p>
+        <div class="search-buttons">
+          <button id="search-today-0" class="btn btn-search btn-search-low">
+            <span class="btn-label">今日 0いいね以上</span>
+          </button>
+          <button id="search-today-5" class="btn btn-search btn-search-low">
+            <span class="btn-label">今日 5いいね以上</span>
+          </button>
+        </div>
+      </div>
+
+      <div class="search-group">
+        <p class="search-group-label">■ 昨日の勢い素材（おすすめ）</p>
+        <div class="search-buttons">
+          <button id="search-yesterday-5" class="btn btn-search btn-search-high">
+            <span class="btn-label">昨日以降 5いいね以上</span>
+          </button>
+          <button id="search-yesterday-10" class="btn btn-search btn-search-high">
+            <span class="btn-label">昨日以降 10いいね以上</span>
+          </button>
+          <button id="search-yesterday-30" class="btn btn-search btn-search-high">
+            <span class="btn-label">昨日以降 30いいね以上</span>
+          </button>
+        </div>
+      </div>
+
+      <div class="search-group">
+        <p class="search-group-label">■ 少し広めに探す（一昨日まで）</p>
+        <div class="search-buttons">
+          <button id="search-dayb4-20" class="btn btn-search btn-search-images">
+            <span class="btn-label">一昨日以降 20いいね以上</span>
+          </button>
+          <button id="search-dayb4-40" class="btn btn-search btn-search-images">
+            <span class="btn-label">一昨日以降 40いいね以上</span>
+          </button>
+        </div>
       </div>
 
       <p class="search-note">
-        ※ since: には自動で昨日の日付が入ります。検索後は「最新」タブに切り替えると新着が並びやすいです。
+        ※ since: には自動で日付が入ります。検索後は「最新」タブに切り替えると新着が並びやすいです。
       </p>
     </section>
 
@@ -146,6 +162,16 @@
         <button id="booth-paid" class="btn btn-booth btn-booth-paid">
           <span class="btn-icon">💎</span>
           <span class="btn-label">新着おはV 有料サーチ</span>
+          <span class="btn-sub">有料素材をピックアップ</span>
+        </button>
+        <button id="booth-oyav-free" class="btn btn-booth btn-booth-free">
+          <span class="btn-icon">🆓</span>
+          <span class="btn-label">新着おやV 無料サーチ</span>
+          <span class="btn-sub">無料素材をピックアップ</span>
+        </button>
+        <button id="booth-oyav-paid" class="btn btn-booth btn-booth-paid">
+          <span class="btn-icon">💎</span>
+          <span class="btn-label">新着おやV 有料サーチ</span>
           <span class="btn-sub">有料素材をピックアップ</span>
         </button>
       </div>
