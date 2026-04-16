@@ -497,7 +497,15 @@ function scheduleRender() {
 function render() {
   const canvas = dom.canvas;
   const hasBg = state.bgImg || state.bgColor.type;
-  if (!hasBg || canvas.width === 0) return;
+
+  // 描画するものがない場合はキャンバスをクリア
+  if (!hasBg || canvas.width === 0) {
+    if (canvas.width > 0) {
+      const ctx = canvas.getContext('2d');
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+    }
+    return;
+  }
 
   const ctx = canvas.getContext('2d');
   ctx.imageSmoothingEnabled = true;
@@ -824,6 +832,9 @@ function selectBgColor(type, solid, gradient) {
   // グラデスライダー表示切替
   dom.bgGradStrengthRow.classList.toggle('visible', type === 'gradient');
 
+  // プレースホルダーを必ず非表示
+  dom.canvasPlaceholder.style.display = 'none';
+
   // 背景画像がなければキャンバスサイズを初期化
   initDefaultCanvas();
 
@@ -838,7 +849,7 @@ function clearBgColor() {
   document.querySelectorAll('.bg-swatch').forEach(btn => btn.classList.remove('selected'));
   dom.bgGradStrengthRow.classList.remove('visible');
 
-  // 背景画像もなければプレースホルダーを戻す
+  // 背景画像もなければプレースホルダーを戻してキャンバスを隠す
   if (!state.bgImg) {
     dom.canvasPlaceholder.style.display = '';
   }
