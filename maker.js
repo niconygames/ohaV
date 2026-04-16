@@ -31,6 +31,16 @@ const state = {
 
   // 操作中レイヤー
   activeLayer: 'chara', // 'chara' | 'fg'
+
+  // 自動なじませ
+  colorSync: {
+    enabled:       false,
+    strength:      0.30,
+    blendMode:     'soft-light',
+    preset:        'auto',    // 'auto' | 'morning' | 'noon' | 'evening' | 'night'
+    envColor:      null,      // 背景から自動抽出した環境色 { r, g, b }
+    overrideColor: null,      // プリセット固定色 (auto以外)
+  },
 };
 
 // 処理前の生画像
@@ -95,6 +105,12 @@ document.addEventListener('DOMContentLoaded', () => {
   dom.rotateVal         = document.getElementById('rotate-val');
   dom.resetBtn          = document.getElementById('reset-btn');
 
+  // 自動なじませ
+  dom.colorsyncToggle      = document.getElementById('colorsync-toggle');
+  dom.colorsyncBody        = document.getElementById('colorsync-body');
+  dom.colorsyncStrength    = document.getElementById('colorsync-strength');
+  dom.colorsyncStrengthVal = document.getElementById('colorsync-strength-val');
+
   // エクスポート
   dom.exportBtn      = document.getElementById('export-btn');
   dom.exportNote     = document.getElementById('export-note');
@@ -108,6 +124,7 @@ document.addEventListener('DOMContentLoaded', () => {
   setupLayerToggle();
   setupSliders();
   setupCanvasInteraction();
+  setupColorSync();
   setupExport();
 });
 
@@ -152,6 +169,9 @@ async function onBgSelected(file) {
   }
   dom.canvas.width  = w;
   dom.canvas.height = h;
+
+  // 環境色を抽出（背景が変わるたびに更新）
+  state.colorSync.envColor = extractEnvColor(img, 0.5, 0.6);
 
   scheduleRender();
   updateExportBtn();
@@ -463,8 +483,15 @@ function render() {
   ctx.drawImage(state.bgImg, 0, 0, canvas.width, canvas.height);
 
   // レイヤー2: キャラ
-  if (state.charImg) drawLayer(ctx, state.charImg, canvas.width, canvas.height,
-    state.charPosX, state.charPosY, state.charScale, state.charRotate);
+  if (state.charImg) {
+    drawLayer(ctx, state.charImg, canvas.width, canvas.height,
+      state.charPosX, state.charPosY, state.charScale, state.charRotate);
+    // 色同期オーバーレイ
+    if (state.colorSync.enabled) {
+      applyColorSyncOverlay(ctx, state.charImg, canvas.width, canvas.height,
+        state.charPosX, state.charPosY, state.charScale, state.charRotate);
+    }
+  }
 
   // レイヤー3: 手前素材
   if (state.fgImg) drawLayer(ctx, state.fgImg, canvas.width, canvas.height,
@@ -574,7 +601,10 @@ function setupCanvasInteraction() {
     scheduleRender();
   });
 
-  window.addEventListener('mouseup', () => { dragging = false; });
+  window.addEventListener('mouseup', () => {
+    if (dragging) refreshEnvColorForPosition();
+    dragging = false;
+  });
 
   // --- マウスホイール: 拡大縮小 ---
   wrap.addEventListener('wheel', (e) => {
@@ -635,7 +665,10 @@ function setupCanvasInteraction() {
 
   wrap.addEventListener('touchend', (e) => {
     if (e.touches.length < 2) pinchStartDist = null;
-    if (e.touches.length === 0) singleStart = null;
+    if (e.touches.length === 0) {
+      singleStart = null;
+      refreshEnvColorForPosition();
+    }
   });
 }
 
@@ -657,6 +690,149 @@ function touchAngle(t1, t2) {
 }
 
 function clamp01(v) { return Math.max(0, Math.min(1, v)); }
+
+// ==========================================
+// 自動なじませ
+// ==========================================
+
+const PRESETS = {
+  auto:    null,                          // 背景から自動抽出
+  morning: { r: 190, g: 215, b: 255 },   // 朝: 淡いブルー
+  noon:    { r: 255, g: 248, b: 210 },   // 昼: 明るいウォーム
+  evening: { r: 255, g: 140, b: 55  },   // 夕: 暖色オレンジ
+  night:   { r: 55,  g: 65,  b: 175 },   // 夜: ディープブルー
+};
+
+function setupColorSync() {
+  // ON/OFF トグル
+  dom.colorsyncToggle.addEventListener('change', () => {
+    state.colorSync.enabled = dom.colorsyncToggle.checked;
+    dom.colorsyncBody.hidden = !state.colorSync.enabled;
+    scheduleRender();
+  });
+
+  // 強度スライダー
+  dom.colorsyncStrength.addEventListener('input', () => {
+    state.colorSync.strength = parseInt(dom.colorsyncStrength.value) / 100;
+    dom.colorsyncStrengthVal.textContent = dom.colorsyncStrength.value + '%';
+    scheduleRender();
+  });
+
+  // プリセットボタン
+  document.querySelectorAll('.btn-preset').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.btn-preset').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      const preset = btn.dataset.preset;
+      state.colorSync.preset        = preset;
+      state.colorSync.overrideColor = PRESETS[preset];
+      scheduleRender();
+    });
+  });
+
+  // ブレンドモード
+  document.querySelectorAll('input[name="blend-mode"]').forEach(radio => {
+    radio.addEventListener('change', () => {
+      state.colorSync.blendMode = radio.value;
+      scheduleRender();
+    });
+  });
+}
+
+// 環境色をキャラ位置に合わせて再抽出
+function refreshEnvColorForPosition() {
+  if (!state.bgImg) return;
+  state.colorSync.envColor = extractEnvColor(
+    state.bgImg,
+    state.charPosX,
+    state.charPosY
+  );
+  if (state.colorSync.enabled && state.colorSync.preset === 'auto') {
+    scheduleRender();
+  }
+}
+
+// 背景からキャラ位置周辺の環境色を抽出
+function extractEnvColor(bgImg, focusX = 0.5, focusY = 0.6) {
+  const size = 32;
+  const canvas = document.createElement('canvas');
+  canvas.width = size; canvas.height = size;
+  const ctx = canvas.getContext('2d');
+  ctx.drawImage(bgImg, 0, 0, size, size);
+  const { data } = ctx.getImageData(0, 0, size, size);
+
+  // フォーカス領域: キャラ位置を中心に±30%
+  const fx1 = Math.max(0, Math.floor((focusX - 0.3) * size));
+  const fy1 = Math.max(0, Math.floor((focusY - 0.3) * size));
+  const fx2 = Math.min(size - 1, Math.ceil((focusX + 0.3) * size));
+  const fy2 = Math.min(size - 1, Math.ceil((focusY + 0.3) * size));
+
+  let sumR = 0, sumG = 0, sumB = 0, total = 0;
+
+  for (let y = 0; y < size; y++) {
+    for (let x = 0; x < size; x++) {
+      const i = (y * size + x) * 4;
+      const r = data[i], g = data[i + 1], b = data[i + 2];
+
+      // 極端に明るい(空)・暗い(影)ピクセルは除外
+      const brightness = (r + g + b) / 3;
+      if (brightness > 235 || brightness < 15) continue;
+
+      // フォーカス領域は3倍重み
+      const inFocus = x >= fx1 && x <= fx2 && y >= fy1 && y <= fy2;
+      const focusW  = inFocus ? 3 : 1;
+
+      // 彩度が高いピクセルほど重視
+      const [, sat] = rgbToHsl(r, g, b);
+      const satW = 0.5 + sat;
+
+      const w = focusW * satW;
+      sumR += r * w; sumG += g * w; sumB += b * w;
+      total += w;
+    }
+  }
+
+  if (total === 0) {
+    // フォールバック: 単純平均
+    for (let i = 0; i < data.length; i += 4) {
+      sumR += data[i]; sumG += data[i + 1]; sumB += data[i + 2]; total++;
+    }
+  }
+
+  return {
+    r: Math.round(sumR / total),
+    g: Math.round(sumG / total),
+    b: Math.round(sumB / total),
+  };
+}
+
+// 色同期オーバーレイをメインcanvasに適用（非破壊）
+function applyColorSyncOverlay(ctx, img, canvasW, canvasH, posX, posY, scale, rotate) {
+  const envColor = state.colorSync.overrideColor || state.colorSync.envColor;
+  if (!envColor) return;
+
+  const h  = canvasH * scale;
+  const w  = h * (img.naturalWidth / img.naturalHeight);
+  const cx = posX * canvasW;
+  const cy = posY * canvasH;
+
+  // オフスクリーンcanvas: キャラ形状に環境色でシルエットを作成
+  const off    = new OffscreenCanvas(Math.ceil(w), Math.ceil(h));
+  const offCtx = off.getContext('2d');
+  offCtx.drawImage(img, 0, 0, w, h);
+  offCtx.globalCompositeOperation = 'source-atop'; // キャラのα内のみ塗る
+  offCtx.fillStyle = `rgb(${envColor.r}, ${envColor.g}, ${envColor.b})`;
+  offCtx.fillRect(0, 0, w, h);
+
+  // メインcanvasにブレンドモードで重ねる
+  ctx.save();
+  ctx.translate(cx, cy);
+  ctx.rotate(rotate * Math.PI / 180);
+  ctx.globalAlpha               = state.colorSync.strength;
+  ctx.globalCompositeOperation  = state.colorSync.blendMode;
+  ctx.drawImage(off, -w / 2, -h / 2);
+  ctx.restore(); // globalAlpha / globalCompositeOperation もリセットされる
+}
 
 // ==========================================
 // エクスポート
@@ -727,8 +903,14 @@ function buildExportCanvas(maxSide) {
   // 背景
   ctx.drawImage(state.bgImg, 0, 0, w, h);
   // キャラ
-  if (state.charImg) drawLayer(ctx, state.charImg, w, h,
-    state.charPosX, state.charPosY, state.charScale, state.charRotate);
+  if (state.charImg) {
+    drawLayer(ctx, state.charImg, w, h,
+      state.charPosX, state.charPosY, state.charScale, state.charRotate);
+    if (state.colorSync.enabled) {
+      applyColorSyncOverlay(ctx, state.charImg, w, h,
+        state.charPosX, state.charPosY, state.charScale, state.charRotate);
+    }
+  }
   // 手前素材
   if (state.fgImg) drawLayer(ctx, state.fgImg, w, h,
     state.fgPosX, state.fgPosY, state.fgScale, state.fgRotate);

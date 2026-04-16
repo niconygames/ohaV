@@ -536,6 +536,167 @@ body::before {
 }
 
 /* ==========================================
+   自動なじませ
+   ========================================== */
+
+/* トグルスイッチ */
+.toggle-switch {
+  position: relative;
+  display: inline-flex;
+  width: 46px;
+  height: 26px;
+  cursor: pointer;
+  margin-left: auto;
+  flex-shrink: 0;
+}
+
+.toggle-switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+  position: absolute;
+}
+
+.toggle-track {
+  position: absolute;
+  inset: 0;
+  background: var(--color-text-subtle);
+  border-radius: 999px;
+  transition: background 0.25s;
+}
+
+.toggle-track::before {
+  content: '';
+  position: absolute;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: white;
+  top: 3px;
+  left: 3px;
+  transition: transform 0.25s;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.3);
+}
+
+.toggle-switch input:checked + .toggle-track {
+  background: var(--gradient-primary);
+}
+
+.toggle-switch input:checked + .toggle-track::before {
+  transform: translateX(20px);
+}
+
+/* なじませ本体 */
+.colorsync-body {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin-top: 4px;
+}
+
+/* プリセットボタン */
+.preset-buttons {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.btn-preset {
+  padding: 6px 14px;
+  border-radius: 999px;
+  border: 1px solid var(--color-border);
+  background: var(--color-bg-card2);
+  color: var(--color-text-muted);
+  font-family: inherit;
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all var(--transition);
+  white-space: nowrap;
+}
+
+.btn-preset:hover {
+  border-color: var(--color-primary);
+  color: var(--color-primary-light);
+}
+
+.btn-preset.active {
+  border-color: transparent;
+  color: white;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.25);
+}
+
+.btn-preset[data-preset="auto"].active    { background: var(--gradient-primary); }
+.btn-preset[data-preset="morning"].active { background: linear-gradient(135deg, #fbbf24, #f59e0b); }
+.btn-preset[data-preset="noon"].active    { background: linear-gradient(135deg, #60a5fa, #3b82f6); }
+.btn-preset[data-preset="evening"].active { background: linear-gradient(135deg, #f97316, #ef4444); }
+.btn-preset[data-preset="night"].active   { background: linear-gradient(135deg, #818cf8, #4338ca); }
+
+/* 詳細設定アコーディオン */
+.colorsync-details {
+  border-top: 1px solid var(--color-border);
+  padding-top: 12px;
+}
+
+.colorsync-details summary {
+  cursor: pointer;
+  font-size: 0.78rem;
+  color: var(--color-text-muted);
+  list-style: none;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  user-select: none;
+}
+
+.colorsync-details summary::-webkit-details-marker { display: none; }
+
+.colorsync-details summary::before {
+  content: '▸';
+  color: var(--color-primary);
+  transition: transform 0.2s;
+  font-size: 0.7rem;
+}
+
+.colorsync-details[open] summary::before {
+  transform: rotate(90deg);
+}
+
+.colorsync-details-body {
+  margin-top: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.blend-label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--color-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.blend-mode-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.blend-option {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 0.82rem;
+  color: var(--color-text-muted);
+  cursor: pointer;
+}
+
+.blend-option input[type="radio"] {
+  accent-color: var(--color-primary);
+}
+
+/* ==========================================
    Export Section
    ========================================== */
 .export-options {

@@ -170,6 +170,59 @@
       </div>
     </section>
 
+    <!-- 自動なじませ -->
+    <section class="card" id="section-colorsync">
+      <div class="section-header">
+        <span class="section-icon">🎨</span>
+        <h2 class="section-title">自動なじませ</h2>
+        <label class="toggle-switch" title="自動なじませ ON/OFF">
+          <input type="checkbox" id="colorsync-toggle">
+          <span class="toggle-track"></span>
+        </label>
+      </div>
+
+      <div id="colorsync-body" class="colorsync-body" hidden>
+
+        <!-- プリセット -->
+        <div class="preset-buttons">
+          <button class="btn-preset active" data-preset="auto">✨ 自動</button>
+          <button class="btn-preset" data-preset="morning">☀️ 朝</button>
+          <button class="btn-preset" data-preset="noon">🌞 昼</button>
+          <button class="btn-preset" data-preset="evening">🌅 夕</button>
+          <button class="btn-preset" data-preset="night">🌙 夜</button>
+        </div>
+
+        <!-- 強度スライダー -->
+        <div class="control-item">
+          <div class="control-label">
+            <span>馴染ませ強度</span>
+            <span id="colorsync-strength-val">30%</span>
+          </div>
+          <input type="range" id="colorsync-strength" min="0" max="100" value="30" step="1">
+        </div>
+
+        <!-- 詳細設定 -->
+        <details class="colorsync-details">
+          <summary>詳細設定</summary>
+          <div class="colorsync-details-body">
+            <p class="blend-label">ブレンドモード</p>
+            <div class="blend-mode-options">
+              <label class="blend-option">
+                <input type="radio" name="blend-mode" value="soft-light" checked> ソフトライト
+              </label>
+              <label class="blend-option">
+                <input type="radio" name="blend-mode" value="overlay"> オーバーレイ
+              </label>
+              <label class="blend-option">
+                <input type="radio" name="blend-mode" value="multiply"> 乗算
+              </label>
+            </div>
+          </div>
+        </details>
+
+      </div>
+    </section>
+
     <!-- STEP 5: 出力 -->
     <section class="card" id="section-export">
       <div class="section-header">
