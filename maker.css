@@ -1079,3 +1079,67 @@ body::before {
   flex: 1;
   accent-color: var(--color-primary);
 }
+
+/* キャンバスサイズ選択 */
+.bg-canvas-size-row {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.bg-size-note {
+  font-weight: 400;
+  font-size: 0.68rem;
+  color: var(--color-text-subtle);
+  text-transform: none;
+  letter-spacing: 0;
+  margin-left: 4px;
+}
+
+.bg-size-buttons {
+  display: flex;
+  gap: 8px;
+}
+
+.bg-size-btn {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 10px 8px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-bg-card2);
+  color: var(--color-text-muted);
+  font-family: inherit;
+  cursor: pointer;
+  transition: all var(--transition);
+}
+
+.bg-size-btn:hover {
+  border-color: var(--color-primary);
+  color: var(--color-primary-light);
+}
+
+.bg-size-btn.active {
+  border-color: var(--color-primary);
+  background: rgba(168, 85, 247, 0.12);
+  color: var(--color-primary-light);
+  box-shadow: 0 0 0 1px var(--color-primary);
+}
+
+.bg-size-ratio {
+  font-size: 1rem;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.bg-size-px {
+  font-size: 0.65rem;
+  color: var(--color-text-subtle);
+}
+
+.bg-size-btn.active .bg-size-px {
+  color: var(--color-primary-light);
+}

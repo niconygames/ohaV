@@ -17,6 +17,8 @@ const state = {
     solid:        null,   // '#FFFFFF' など
     gradient:     null,   // { from: '#FFCC99', to: '#FF99CC', name: '朝焼け' }
     gradStrength: 75,     // 0〜100
+    canvasW:      1920,   // 背景画像なし時のキャンバス幅 (16:9デフォ)
+    canvasH:      1080,   // 背景画像なし時のキャンバス高さ (16:9デフォ)
   },
 
   // キャラ (レイヤー2)
@@ -133,6 +135,9 @@ document.addEventListener('DOMContentLoaded', () => {
   dom.bgGradStrength    = document.getElementById('bg-grad-strength');
   dom.bgGradStrengthVal = document.getElementById('bg-grad-strength-val');
   dom.bgColorClearBtn   = document.getElementById('bg-color-clear-btn');
+  dom.bgSize169         = document.getElementById('bg-size-16-9');
+  dom.bgSize916         = document.getElementById('bg-size-9-16');
+  dom.bgCanvasSizeRow   = document.getElementById('bg-canvas-size-row');
 
   setupUploadZone(dom.bgUploadZone,  dom.bgFileInput,  onBgSelected);
   setupUploadZone(dom.charaUploadZone, dom.charaFileInput, onCharaSelected);
@@ -743,6 +748,24 @@ const BG_GRADS = [
 ];
 
 function setupBgColorPicker() {
+  // --- サイズボタン ---
+  [dom.bgSize169, dom.bgSize916].forEach(btn => {
+    btn.addEventListener('click', () => {
+      dom.bgSize169.classList.remove('active');
+      dom.bgSize916.classList.remove('active');
+      btn.classList.add('active');
+      state.bgColor.canvasW = parseInt(btn.dataset.w);
+      state.bgColor.canvasH = parseInt(btn.dataset.h);
+      // 背景画像なしの場合はキャンバスを即座に更新
+      if (!state.bgImg) {
+        dom.canvas.width  = state.bgColor.canvasW;
+        dom.canvas.height = state.bgColor.canvasH;
+        requestAnimationFrame(fitCanvasDisplay);
+        if (state.bgColor.type) scheduleRender();
+      }
+    });
+  });
+
   // --- 単色スウォッチ生成 ---
   BG_SOLIDS.forEach(({ name, hex }) => {
     const btn = document.createElement('button');
@@ -824,11 +847,11 @@ function clearBgColor() {
   updateExportBtn();
 }
 
-// 背景画像もカラーもない → デフォルト1080×1080でキャンバス初期化
+// 背景画像もカラーもない → 指定サイズでキャンバス初期化
 function initDefaultCanvas() {
   if (!state.bgImg && dom.canvas.width === 0) {
-    dom.canvas.width  = 1080;
-    dom.canvas.height = 1080;
+    dom.canvas.width  = state.bgColor.canvasW;
+    dom.canvas.height = state.bgColor.canvasH;
     requestAnimationFrame(fitCanvasDisplay);
     dom.canvasPlaceholder.style.display = 'none';
   }
