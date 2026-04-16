@@ -27,7 +27,7 @@ const state = {
   charChromaColor: null,
   charPosX:     0.5,
   charPosY:     0.6,
-  charScale:    0.5,
+  charScale:    1.0,
   charRotate:   0,
 
   // 手前素材 (レイヤー3)
@@ -36,7 +36,7 @@ const state = {
   fgChromaColor: null,
   fgPosX:       0.5,
   fgPosY:       0.5,
-  fgScale:      0.8,
+  fgScale:      1.0,
   fgRotate:     0,
 
   // 操作中レイヤー
@@ -569,10 +569,10 @@ function setupSliders() {
   dom.resetBtn.addEventListener('click', () => {
     if (state.activeLayer === 'chara') {
       state.charPosX = 0.5; state.charPosY = 0.6;
-      state.charScale = 0.5; state.charRotate = 0;
+      state.charScale = 1.0; state.charRotate = 0;
     } else {
       state.fgPosX = 0.5; state.fgPosY = 0.5;
-      state.fgScale = 0.8; state.fgRotate = 0;
+      state.fgScale = 1.0; state.fgRotate = 0;
     }
     syncSlidersToState();
     scheduleRender();
