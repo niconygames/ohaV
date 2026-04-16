@@ -169,6 +169,8 @@ async function onBgSelected(file) {
   }
   dom.canvas.width  = w;
   dom.canvas.height = h;
+  // aspect-ratio を明示することで max-height と組み合わせてもアスペクト比を保持
+  dom.canvas.style.aspectRatio = `${w} / ${h}`;
 
   // 環境色を抽出（背景が変わるたびに更新）
   state.colorSync.envColor = extractEnvColor(img, 0.5, 0.6);

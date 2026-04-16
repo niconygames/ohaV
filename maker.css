@@ -451,6 +451,7 @@ body::before {
   display: block;
   width: 100%;
   height: auto;
+  max-height: 340px;
   border-radius: var(--radius-md);
 }
 
