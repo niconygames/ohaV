@@ -1,0 +1,80 @@
+おはV画像合成：自動色相同期 実装計画書
+1. 開発の目的
+背景画像のライティング情報を解析し、アニメ塗りのキャラクターに最適な色温度とトーンを自動適用することで、合成特有の「浮いている感」をワンボタンで解消する。
+
+2. 技術アルゴリズム：3ステップ・ロジック
+Canvasの getImageData を用いた統計的カラーマッチングを採用します。
+
+STEP 1: 背景の環境色抽出（Sampling）
+背景全体の平均色を取ると空などの極端な色に引っ張られるため、キャラクターが配置されるであろう中央付近、または全体の縮小画像から「支配的な色」を抽出します。
+
+処理: 背景Canvasを 1x1 または 4x4 ピクセルに超縮小描画し、その平均RGB値を取得。
+
+補正: 抽出した色の彩度が低すぎる場合は、計算上で少し彩度をブーストして「環境光らしさ」を強調します。
+
+STEP 2: キャラクターへの色相ブレンド（Color Blending）
+取得した環境色をキャラクターに合成します。アニメ塗りには 「ソフトライト」 または 「カラー」 のブレンドモードが最適です。
+
+手法: 1.  キャラ用の一時的な Canvas（オフスクリーン）を作成。
+2.  キャラのシルエット（Alpha値）を保持したまま、STEP 1の環境色で塗りつぶす。
+3.  メインCanvas上で、キャラ本体の上にこの「環境色レイヤー」を globalCompositeOperation = 'soft-light' で重ねる。
+
+STEP 3: 強度調整と仕上げ（Fine Tuning）
+自動計算された値を初期値とし、ユーザーがスライダーで微調整できるようにします。
+
+パラメータ: 「馴染ませ強度（不透明度）」「明るさ」「コントラスト」。
+
+3. Canvas 2D API による実装イメージ（擬似コード）
+JavaScript
+// 背景の平均色を取得する関数
+function getAverageColor(ctx, width, height) {
+    const tempCanvas = document.createElement('canvas');
+    const tempCtx = tempCanvas.getContext('2d');
+    tempCanvas.width = 1;
+    tempCanvas.height = 1;
+    
+    // 背景を1pxに凝縮して描画することで平均色を抽出
+    tempCtx.drawImage(ctx.canvas, 0, 0, width, height, 0, 0, 1, 1);
+    const [r, g, b] = tempCtx.getImageData(0, 0, 1, 1).data;
+    return { r, g, b };
+}
+
+// キャラクターに色を適用する処理
+function applyAutoColorMatch(charCtx, avgColor, strength = 0.3) {
+    const { r, g, b } = avgColor;
+    
+    // 1. 新しいレイヤーとして色を乗せる
+    charCtx.globalCompositeOperation = 'source-atop'; // キャラが存在する部分のみ
+    charCtx.fillStyle = `rgba(${r}, ${g}, ${b}, ${strength})`;
+    charCtx.fillRect(0, 0, charWidth, charHeight);
+    
+    // 2. ブレンドモードを戻す
+    charCtx.globalCompositeOperation = 'source-over';
+}
+4. 追加実装推奨機能（アニメ塗り特化型）
+おはVツールの利便性を高めるための、JavaScriptで完結する追加要素です。
+
+境界線の微細ぼかし（Anti-Aliasing補完）:
+背景除去後のエッジがガタつく場合、Canvasの filter = 'blur(0.5px)' をキャラに一瞬適用してから描画すると、背景への馴染みが劇的に良くなります。
+
+「朝・昼・夕・夜」プリセットボタン:
+自動解析に加えて、「夕方エフェクト（オレンジ乗算＋コントラストUP）」などの固定数値を当てるボタンがあると、ユーザーが直感的に操作できます。
+
+ライトラップ（疑似環境光）:
+キャラの背後に、背景をぼかしたものを薄く配置する、または drop-shadow を白や環境色で薄くかけることで、光の回り込みを表現します。
+
+5. 処理フロー（ユーザー体験）
+背景読み込み: 背景の平均色を内部で計算・保持（非表示）。
+
+キャラ読み込み: AI背景除去実行。
+
+自動調整実行: 「自動なじませ」ボタン押下で、保持していた背景色をキャラにブレンド。
+
+手動微調整: スライダーで「もう少し夕方っぽく」などの調整。
+
+書き出し: toDataURL または convertToBlob で保存。
+
+6. 注意事項
+メモリ管理: Canvasを多用するため、不要になったオフスクリーンCanvasは width = height = 0 にしてメモリ解放を促してください。
+
+カラープロファイル: ブラウザによって色の見え方が微妙に異なるため、計算は常に sRGB を意識した標準的なCanvas操作で行います。

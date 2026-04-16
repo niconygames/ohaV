@@ -1,0 +1,13 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npx serve:*)",
+      "Bash(git add:*)",
+      "Bash(git commit -m ':*)",
+      "Bash(git push:*)",
+      "Bash(curl -s \"https://raw.githubusercontent.com/nyanko3141592/InspirationCat/main/README.md\")",
+      "Bash(curl -s \"https://raw.githubusercontent.com/nyanko3141592/InspirationCat/master/README.md\")",
+      "Bash(curl -s \"https://api.github.com/repos/nyanko3141592/InspirationCat/contents/\")"
+    ]
+  }
+}

@@ -976,20 +976,23 @@ function showToast(message, isError = false) {
 }
 
 // ==========================================
-// キャンバス表示サイズ調整（アスペクト比保持）
+// キャンバス表示サイズ調整（アスペクト比保持・ラップ幅いっぱい）
 // ==========================================
 function fitCanvasDisplay() {
   const cW = dom.canvas.width;
   const cH = dom.canvas.height;
   if (!cW || !cH) return;
 
+  // canvasWrap の実際の横幅に合わせてフィット
   const wrapW = dom.canvasWrap.clientWidth || 640;
   const ratio  = cW / cH;
-  const maxH   = 320;
+  const maxH   = 380;
 
+  // 横幅いっぱいに広げる
   let dW = wrapW;
   let dH = Math.round(dW / ratio);
 
+  // 高さ上限を超えたら高さ基準で計算
   if (dH > maxH) {
     dH = maxH;
     dW = Math.round(dH * ratio);
@@ -997,6 +1000,9 @@ function fitCanvasDisplay() {
 
   dom.canvas.style.width  = dW + 'px';
   dom.canvas.style.height = dH + 'px';
+
+  // canvasWrap の高さも canvas に合わせる（透明部分が残らないように）
+  dom.canvasWrap.style.height = dH + 'px';
 }
 
 window.addEventListener('resize', () => {

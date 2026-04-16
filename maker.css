@@ -204,6 +204,36 @@ body::before {
 }
 
 /* ==========================================
+   Upload Row（3列横並び）
+   ========================================== */
+.upload-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 12px;
+  align-items: start;
+}
+
+@media (max-width: 600px) {
+  .upload-row { grid-template-columns: 1fr; }
+}
+
+.upload-col {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.upload-col-label {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--color-text-muted);
+  margin-bottom: 6px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+/* ==========================================
    Upload Zones
    ========================================== */
 .upload-zone {
@@ -443,6 +473,9 @@ body::before {
   cursor: grab;
   user-select: none;
   -webkit-user-select: none;
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
 
 .canvas-wrap:active { cursor: grabbing; }
@@ -554,6 +587,22 @@ body::before {
    自動なじませ
    ========================================== */
 
+/* 虹色回転アニメーション */
+@keyframes rainbow-spin {
+  0%   { border-color: hsl(0,   100%, 60%); box-shadow: 0 0 8px 2px hsl(0,   100%, 55%); }
+  16%  { border-color: hsl(60,  100%, 50%); box-shadow: 0 0 8px 2px hsl(60,  100%, 45%); }
+  33%  { border-color: hsl(120, 100%, 45%); box-shadow: 0 0 8px 2px hsl(120, 100%, 40%); }
+  50%  { border-color: hsl(180, 100%, 45%); box-shadow: 0 0 8px 2px hsl(180, 100%, 40%); }
+  66%  { border-color: hsl(240, 100%, 65%); box-shadow: 0 0 8px 2px hsl(240, 100%, 60%); }
+  83%  { border-color: hsl(300, 100%, 60%); box-shadow: 0 0 8px 2px hsl(300, 100%, 55%); }
+  100% { border-color: hsl(360, 100%, 60%); box-shadow: 0 0 8px 2px hsl(360, 100%, 55%); }
+}
+
+@keyframes rainbow-bg-spin {
+  0%   { background-position: 0% 50%; }
+  100% { background-position: 300% 50%; }
+}
+
 /* トグルスイッチ */
 .toggle-switch {
   position: relative;
@@ -578,6 +627,13 @@ body::before {
   background: var(--color-text-subtle);
   border-radius: 999px;
   transition: background 0.25s;
+  border: 2px solid transparent;
+}
+
+/* OFFのとき虹色ボーダーがくるくる */
+.toggle-switch:not(:has(input:checked)) .toggle-track {
+  border: 2px solid transparent;
+  animation: rainbow-spin 2s linear infinite;
 }
 
 .toggle-track::before {
