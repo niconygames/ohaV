@@ -1,5 +1,6 @@
 /* ==========================================
    おはVメーカー - maker.js (ES Module)
+   レイヤー構成: 背景 → キャラ → 手前素材
    AI背景除去: @imgly/background-removal (AGPL-3.0)
    ========================================== */
 
@@ -7,17 +8,34 @@
 // State
 // ==========================================
 const state = {
-  bgImg:       null,   // HTMLImageElement (背景)
-  charImg:     null,   // HTMLImageElement (処理済みキャラ・透過)
-  charType:    null,   // 'transparent' | 'chroma' | 'ai'
-  chromaColor: null,   // { r, g, b }
-  posX:        0.5,    // キャラ位置 (正規化 0-1)
-  posY:        0.6,
-  scale:       0.5,    // キャラ高さ = canvas高さ × scale
-  rotate:      0,      // 度数
+  // 背景
+  bgImg: null,
+
+  // キャラ (レイヤー2)
+  charImg:      null,
+  charType:     null,
+  charChromaColor: null,
+  charPosX:     0.5,
+  charPosY:     0.6,
+  charScale:    0.5,
+  charRotate:   0,
+
+  // 手前素材 (レイヤー3)
+  fgImg:        null,
+  fgType:       null,
+  fgChromaColor: null,
+  fgPosX:       0.5,
+  fgPosY:       0.5,
+  fgScale:      0.8,
+  fgRotate:     0,
+
+  // 操作中レイヤー
+  activeLayer: 'chara', // 'chara' | 'fg'
 };
 
-let rawCharImg = null;      // 元のキャラ画像 (処理前)
+// 処理前の生画像
+let rawCharImg = null;
+let rawFgImg   = null;
 let renderScheduled = false;
 
 // ==========================================
@@ -26,40 +44,68 @@ let renderScheduled = false;
 const dom = {};
 
 document.addEventListener('DOMContentLoaded', () => {
-  dom.bgUploadZone      = document.getElementById('bg-upload-zone');
-  dom.bgFileInput       = document.getElementById('bg-file-input');
-  dom.bgPreview         = document.getElementById('bg-preview');
-  dom.charaUploadZone   = document.getElementById('chara-upload-zone');
-  dom.charaFileInput    = document.getElementById('chara-file-input');
-  dom.charaPreview      = document.getElementById('chara-preview');
-  dom.detectionBadge    = document.getElementById('detection-badge');
-  dom.detectionIcon     = document.getElementById('detection-icon');
-  dom.detectionText     = document.getElementById('detection-text');
-  dom.aiProgressWrap    = document.getElementById('ai-progress-wrap');
-  dom.aiProgressBar     = document.getElementById('ai-progress-bar');
-  dom.aiProgressStatus  = document.getElementById('ai-progress-status');
-  dom.aiProgressTime    = document.getElementById('ai-progress-time');
-  dom.chromaControls    = document.getElementById('chroma-controls');
-  dom.chromaThreshold   = document.getElementById('chroma-threshold');
-  dom.chromaThresholdVal= document.getElementById('chroma-threshold-val');
-  dom.chromaFeather     = document.getElementById('chroma-feather');
-  dom.chromaFeatherVal  = document.getElementById('chroma-feather-val');
+  // 背景
+  dom.bgUploadZone  = document.getElementById('bg-upload-zone');
+  dom.bgFileInput   = document.getElementById('bg-file-input');
+  dom.bgPreview     = document.getElementById('bg-preview');
+
+  // キャラ
+  dom.charaUploadZone     = document.getElementById('chara-upload-zone');
+  dom.charaFileInput      = document.getElementById('chara-file-input');
+  dom.charaPreview        = document.getElementById('chara-preview');
+  dom.charaDetectionBadge = document.getElementById('chara-detection-badge');
+  dom.charaDetectionIcon  = document.getElementById('chara-detection-icon');
+  dom.charaDetectionText  = document.getElementById('chara-detection-text');
+  dom.charaAiProgressWrap = document.getElementById('chara-ai-progress-wrap');
+  dom.charaAiProgressBar  = document.getElementById('chara-ai-progress-bar');
+  dom.charaAiProgressStatus = document.getElementById('chara-ai-progress-status');
+  dom.charaAiProgressTime = document.getElementById('chara-ai-progress-time');
+  dom.charaChromaControls = document.getElementById('chara-chroma-controls');
+  dom.charaChromaThreshold    = document.getElementById('chara-chroma-threshold');
+  dom.charaChromaThresholdVal = document.getElementById('chara-chroma-threshold-val');
+  dom.charaChromaFeather      = document.getElementById('chara-chroma-feather');
+  dom.charaChromaFeatherVal   = document.getElementById('chara-chroma-feather-val');
+
+  // 手前素材
+  dom.fgUploadZone     = document.getElementById('fg-upload-zone');
+  dom.fgFileInput      = document.getElementById('fg-file-input');
+  dom.fgPreview        = document.getElementById('fg-preview');
+  dom.fgDetectionBadge = document.getElementById('fg-detection-badge');
+  dom.fgDetectionIcon  = document.getElementById('fg-detection-icon');
+  dom.fgDetectionText  = document.getElementById('fg-detection-text');
+  dom.fgAiProgressWrap = document.getElementById('fg-ai-progress-wrap');
+  dom.fgAiProgressBar  = document.getElementById('fg-ai-progress-bar');
+  dom.fgAiProgressStatus = document.getElementById('fg-ai-progress-status');
+  dom.fgAiProgressTime = document.getElementById('fg-ai-progress-time');
+  dom.fgChromaControls = document.getElementById('fg-chroma-controls');
+  dom.fgChromaThreshold    = document.getElementById('fg-chroma-threshold');
+  dom.fgChromaThresholdVal = document.getElementById('fg-chroma-threshold-val');
+  dom.fgChromaFeather      = document.getElementById('fg-chroma-feather');
+  dom.fgChromaFeatherVal   = document.getElementById('fg-chroma-feather-val');
+
+  // キャンバス・操作
   dom.canvas            = document.getElementById('maker-canvas');
   dom.canvasWrap        = document.getElementById('canvas-wrap');
   dom.canvasPlaceholder = document.getElementById('canvas-placeholder');
+  dom.layerBtnChara     = document.getElementById('layer-btn-chara');
+  dom.layerBtnFg        = document.getElementById('layer-btn-fg');
   dom.scaleSlider       = document.getElementById('scale-slider');
   dom.scaleVal          = document.getElementById('scale-val');
   dom.rotateSlider      = document.getElementById('rotate-slider');
   dom.rotateVal         = document.getElementById('rotate-val');
   dom.resetBtn          = document.getElementById('reset-btn');
-  dom.exportBtn         = document.getElementById('export-btn');
-  dom.exportNote        = document.getElementById('export-note');
-  dom.exportSnsJpg      = document.getElementById('export-sns-jpg');
-  dom.exportSnsPng      = document.getElementById('export-sns-png');
-  dom.exportPrintPng    = document.getElementById('export-print-png');
 
-  setupUploadZone(dom.bgUploadZone,    dom.bgFileInput,    onBgSelected);
+  // エクスポート
+  dom.exportBtn      = document.getElementById('export-btn');
+  dom.exportNote     = document.getElementById('export-note');
+  dom.exportSnsJpg   = document.getElementById('export-sns-jpg');
+  dom.exportSnsPng   = document.getElementById('export-sns-png');
+  dom.exportPrintPng = document.getElementById('export-print-png');
+
+  setupUploadZone(dom.bgUploadZone,  dom.bgFileInput,  onBgSelected);
   setupUploadZone(dom.charaUploadZone, dom.charaFileInput, onCharaSelected);
+  setupUploadZone(dom.fgUploadZone,  dom.fgFileInput,  onFgSelected);
+  setupLayerToggle();
   setupSliders();
   setupCanvasInteraction();
   setupExport();
@@ -86,7 +132,7 @@ function setupUploadZone(zone, input, handler) {
 }
 
 // ==========================================
-// Background Image
+// 背景
 // ==========================================
 async function onBgSelected(file) {
   const url = URL.createObjectURL(file);
@@ -97,7 +143,6 @@ async function onBgSelected(file) {
   dom.bgUploadZone.classList.add('has-image');
   dom.canvasPlaceholder.style.display = 'none';
 
-  // プレビューcanvasサイズ: 長辺1920px以内
   const maxSide = 1920;
   let w = img.naturalWidth, h = img.naturalHeight;
   if (Math.max(w, h) > maxSide) {
@@ -113,18 +158,16 @@ async function onBgSelected(file) {
 }
 
 // ==========================================
-// Character Image
+// キャラ素材
 // ==========================================
 async function onCharaSelected(file) {
-  // プレビュー表示
   const rawUrl = URL.createObjectURL(file);
   dom.charaPreview.src = rawUrl;
   dom.charaUploadZone.classList.add('has-image');
 
-  // UI リセット
-  hideBadge();
-  hideAiProgress();
-  dom.chromaControls.classList.remove('visible');
+  hideBadge(dom.charaDetectionBadge);
+  hideAiProgress(dom.charaAiProgressWrap);
+  dom.charaChromaControls.classList.remove('visible');
   state.charImg = null;
   state.charType = null;
   rawCharImg = null;
@@ -133,28 +176,76 @@ async function onCharaSelected(file) {
   const img = await loadImage(rawUrl);
   rawCharImg = img;
 
-  // 判定
   const detection = await detectCharType(img);
-  state.charType   = detection.type;
-  state.chromaColor = detection.color || null;
+  state.charType       = detection.type;
+  state.charChromaColor = detection.color || null;
 
   if (detection.type === 'transparent') {
-    showBadge('type-transparent', '✅', '透過PNG — そのまま使用します');
+    showBadge(dom.charaDetectionBadge, dom.charaDetectionIcon, dom.charaDetectionText,
+      'type-transparent', '✅', '透過PNG — そのまま使用します');
     state.charImg = img;
     scheduleRender();
     updateExportBtn();
 
   } else if (detection.type === 'chroma') {
     const hex = rgbToHex(detection.color.r, detection.color.g, detection.color.b);
-    showBadge('type-chroma', '🎨', `クロマキー検出 (${hex}) — 色を除去します`);
-    dom.chromaControls.classList.add('visible');
-    await applyChromaKey();
+    showBadge(dom.charaDetectionBadge, dom.charaDetectionIcon, dom.charaDetectionText,
+      'type-chroma', '🎨', `クロマキー検出 (${hex}) — 色を除去します`);
+    dom.charaChromaControls.classList.add('visible');
+    await applyChromaKey('chara');
     updateExportBtn();
 
   } else {
-    showBadge('type-ai', '🤖', 'AI背景除去を実行します...');
-    await applyAiRemoval(file);
+    showBadge(dom.charaDetectionBadge, dom.charaDetectionIcon, dom.charaDetectionText,
+      'type-ai', '🤖', 'AI背景除去を実行します...');
+    await applyAiRemoval(file, 'chara');
     updateExportBtn();
+  }
+}
+
+// ==========================================
+// 手前素材
+// ==========================================
+async function onFgSelected(file) {
+  const rawUrl = URL.createObjectURL(file);
+  dom.fgPreview.src = rawUrl;
+  dom.fgUploadZone.classList.add('has-image');
+
+  hideBadge(dom.fgDetectionBadge);
+  hideAiProgress(dom.fgAiProgressWrap);
+  dom.fgChromaControls.classList.remove('visible');
+  state.fgImg  = null;
+  state.fgType = null;
+  rawFgImg = null;
+
+  const img = await loadImage(rawUrl);
+  rawFgImg = img;
+
+  const detection = await detectCharType(img);
+  state.fgType       = detection.type;
+  state.fgChromaColor = detection.color || null;
+
+  if (detection.type === 'transparent') {
+    showBadge(dom.fgDetectionBadge, dom.fgDetectionIcon, dom.fgDetectionText,
+      'type-transparent', '✅', '透過PNG — そのまま使用します');
+    state.fgImg = img;
+    dom.layerBtnFg.disabled = false;
+    scheduleRender();
+
+  } else if (detection.type === 'chroma') {
+    const hex = rgbToHex(detection.color.r, detection.color.g, detection.color.b);
+    showBadge(dom.fgDetectionBadge, dom.fgDetectionIcon, dom.fgDetectionText,
+      'type-chroma', '🎨', `クロマキー検出 (${hex}) — 色を除去します`);
+    dom.fgChromaControls.classList.add('visible');
+    await applyChromaKey('fg');
+    dom.layerBtnFg.disabled = false;
+    scheduleRender();
+
+  } else {
+    showBadge(dom.fgDetectionBadge, dom.fgDetectionIcon, dom.fgDetectionText,
+      'type-ai', '🤖', 'AI背景除去を実行します...');
+    await applyAiRemoval(file, 'fg');
+    dom.layerBtnFg.disabled = false;
   }
 }
 
@@ -162,7 +253,6 @@ async function onCharaSelected(file) {
 // 自動判定: 透過PNG / クロマキー / 背景あり
 // ==========================================
 async function detectCharType(img) {
-  // 縮小してピクセル解析
   const maxAnalyze = 400;
   const scale = Math.min(1, maxAnalyze / Math.max(img.naturalWidth, img.naturalHeight));
   const w = Math.round(img.naturalWidth * scale);
@@ -192,8 +282,7 @@ async function detectCharType(img) {
         ((h - 1 - cy) * w + (w - 1 - cx)) * 4,
       ];
       for (const o of offsets) {
-        sumR += data[o]; sumG += data[o + 1]; sumB += data[o + 2];
-        cnt++;
+        sumR += data[o]; sumG += data[o + 1]; sumB += data[o + 2]; cnt++;
       }
     }
   }
@@ -202,30 +291,33 @@ async function detectCharType(img) {
   const [hNorm, sat] = rgbToHsl(avgR, avgG, avgB);
   const hue = hNorm * 360;
 
-  // 緑(80-170°) または 青系(190-270°) かつ彩度 > 0.30 → クロマキー
   if (sat > 0.30 && ((hue >= 80 && hue <= 170) || (hue >= 190 && hue <= 270))) {
     return { type: 'chroma', color: { r: Math.round(avgR), g: Math.round(avgG), b: Math.round(avgB) } };
   }
-
   return { type: 'ai' };
 }
 
 // ==========================================
-// クロマキー除去
+// クロマキー除去 (layer: 'chara' | 'fg')
 // ==========================================
-async function applyChromaKey() {
-  if (!rawCharImg || !state.chromaColor) return;
+async function applyChromaKey(layer) {
+  const rawImg     = layer === 'chara' ? rawCharImg   : rawFgImg;
+  const chromaColor = layer === 'chara' ? state.charChromaColor : state.fgChromaColor;
+  const thresholdEl = layer === 'chara' ? dom.charaChromaThreshold   : dom.fgChromaThreshold;
+  const featherEl   = layer === 'chara' ? dom.charaChromaFeather     : dom.fgChromaFeather;
 
-  const threshold   = parseInt(dom.chromaThreshold.value);
-  const feather     = parseInt(dom.chromaFeather.value);
+  if (!rawImg || !chromaColor) return;
+
+  const threshold    = parseInt(thresholdEl.value);
+  const feather      = parseInt(featherEl.value);
   const featherRange = feather * 12;
-  const { r: kr, g: kg, b: kb } = state.chromaColor;
+  const { r: kr, g: kg, b: kb } = chromaColor;
 
   const canvas = document.createElement('canvas');
-  canvas.width  = rawCharImg.naturalWidth;
-  canvas.height = rawCharImg.naturalHeight;
+  canvas.width  = rawImg.naturalWidth;
+  canvas.height = rawImg.naturalHeight;
   const ctx = canvas.getContext('2d');
-  ctx.drawImage(rawCharImg, 0, 0);
+  ctx.drawImage(rawImg, 0, 0);
 
   const imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
   const data = imgData.data;
@@ -235,18 +327,23 @@ async function applyChromaKey() {
     if (dist < threshold) {
       data[i + 3] = 0;
     } else if (featherRange > 0 && dist < threshold + featherRange) {
-      const alpha = (dist - threshold) / featherRange;
-      data[i + 3] = Math.round(alpha * data[i + 3]);
+      data[i + 3] = Math.round(((dist - threshold) / featherRange) * data[i + 3]);
     }
   }
 
   ctx.putImageData(imgData, 0, 0);
-  state.charImg = await canvasToImage(canvas);
+  const result = await canvasToImage(canvas);
+
+  if (layer === 'chara') {
+    state.charImg = result;
+  } else {
+    state.fgImg = result;
+  }
   scheduleRender();
 }
 
 // ==========================================
-// AI背景除去 (@imgly/background-removal)
+// AI背景除去 (layer: 'chara' | 'fg')
 // ==========================================
 const IMGLY_CDN = 'https://cdn.jsdelivr.net/npm/@imgly/background-removal@1.4.5/dist/';
 let _removeBackground = null;
@@ -258,8 +355,16 @@ async function loadRemoveBackground() {
   return _removeBackground;
 }
 
-async function applyAiRemoval(file) {
-  showAiProgress();
+async function applyAiRemoval(file, layer) {
+  const progressWrap   = layer === 'chara' ? dom.charaAiProgressWrap   : dom.fgAiProgressWrap;
+  const progressBar    = layer === 'chara' ? dom.charaAiProgressBar    : dom.fgAiProgressBar;
+  const progressStatus = layer === 'chara' ? dom.charaAiProgressStatus : dom.fgAiProgressStatus;
+  const progressTime   = layer === 'chara' ? dom.charaAiProgressTime   : dom.fgAiProgressTime;
+  const badgeEl        = layer === 'chara' ? dom.charaDetectionBadge   : dom.fgDetectionBadge;
+  const badgeIcon      = layer === 'chara' ? dom.charaDetectionIcon    : dom.fgDetectionIcon;
+  const badgeText      = layer === 'chara' ? dom.charaDetectionText    : dom.fgDetectionText;
+
+  showAiProgress(progressWrap, progressBar, progressStatus, progressTime);
   const startTime = Date.now();
   let inferenceStarted = false;
   let inferenceStartTime = null;
@@ -272,46 +377,65 @@ async function applyAiRemoval(file) {
       progress: (key, current, total) => {
         if (!total) return;
         const pct = Math.min(99, Math.round((current / total) * 100));
-        dom.aiProgressBar.style.width = pct + '%';
+        progressBar.style.width = pct + '%';
 
         if (key.startsWith('fetch:')) {
-          dom.aiProgressStatus.textContent = 'AIモデル読み込み中...';
-          dom.aiProgressTime.textContent = `${pct}%`;
-
+          progressStatus.textContent = 'AIモデル読み込み中...';
+          progressTime.textContent   = `${pct}%`;
         } else if (key === 'compute:inference') {
           if (!inferenceStarted) {
-            inferenceStarted = true;
-            inferenceStartTime = Date.now();
+            inferenceStarted    = true;
+            inferenceStartTime  = Date.now();
           }
-          dom.aiProgressStatus.textContent = 'AI背景除去中...';
-
+          progressStatus.textContent = 'AI背景除去中...';
           if (pct > 5 && inferenceStartTime) {
-            const elapsed = (Date.now() - inferenceStartTime) / 1000;
+            const elapsed   = (Date.now() - inferenceStartTime) / 1000;
             const estimated = elapsed / (pct / 100);
             const remaining = Math.max(0, Math.round(estimated - elapsed));
-            dom.aiProgressTime.textContent = remaining > 0
-              ? `残り約 ${remaining}秒`
-              : 'もうすぐ完了...';
+            progressTime.textContent = remaining > 0 ? `残り約 ${remaining}秒` : 'もうすぐ完了...';
           } else {
-            dom.aiProgressTime.textContent = '計算中...';
+            progressTime.textContent = '計算中...';
           }
         }
       },
     });
 
-    const url = URL.createObjectURL(resultBlob);
-    state.charImg = await loadImage(url);
+    progressBar.style.width = '100%';
+    hideAiProgress(progressWrap);
 
-    dom.aiProgressBar.style.width = '100%';
-    hideAiProgress();
-    showBadge('type-ai', '✅', 'AI背景除去 完了！キャラを配置してください');
+    const url = URL.createObjectURL(resultBlob);
+    const result = await loadImage(url);
+
+    if (layer === 'chara') {
+      state.charImg = result;
+    } else {
+      state.fgImg = result;
+    }
+
+    showBadge(badgeEl, badgeIcon, badgeText, 'type-ai', '✅', 'AI背景除去 完了！配置してください');
     scheduleRender();
+    updateExportBtn();
 
   } catch (err) {
-    hideAiProgress();
-    showBadge('type-error', '❌', `エラー: ${err.message || 'AI除去に失敗しました'}`);
+    hideAiProgress(progressWrap);
+    showBadge(badgeEl, badgeIcon, badgeText, 'type-error', '❌', `エラー: ${err.message || 'AI除去に失敗しました'}`);
     console.error('[おはVメーカー] AI除去エラー:', err);
   }
+}
+
+// ==========================================
+// レイヤー切り替えトグル
+// ==========================================
+function setupLayerToggle() {
+  dom.layerBtnChara.addEventListener('click', () => setActiveLayer('chara'));
+  dom.layerBtnFg.addEventListener('click',    () => setActiveLayer('fg'));
+}
+
+function setActiveLayer(layer) {
+  state.activeLayer = layer;
+  dom.layerBtnChara.classList.toggle('active', layer === 'chara');
+  dom.layerBtnFg.classList.toggle('active',    layer === 'fg');
+  syncSlidersToState();
 }
 
 // ==========================================
@@ -333,70 +457,92 @@ function render() {
   const ctx = canvas.getContext('2d');
   ctx.imageSmoothingEnabled = true;
   ctx.imageSmoothingQuality = 'high';
-
-  // 背景
   ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+  // レイヤー1: 背景
   ctx.drawImage(state.bgImg, 0, 0, canvas.width, canvas.height);
 
-  if (!state.charImg) return;
+  // レイヤー2: キャラ
+  if (state.charImg) drawLayer(ctx, state.charImg, canvas.width, canvas.height,
+    state.charPosX, state.charPosY, state.charScale, state.charRotate);
 
-  // キャラサイズ: state.scale = キャラ高さ / canvas高さ
-  const charNatW = state.charImg.naturalWidth;
-  const charNatH = state.charImg.naturalHeight;
-  const charH = canvas.height * state.scale;
-  const charW = charH * (charNatW / charNatH);
+  // レイヤー3: 手前素材
+  if (state.fgImg) drawLayer(ctx, state.fgImg, canvas.width, canvas.height,
+    state.fgPosX, state.fgPosY, state.fgScale, state.fgRotate);
+}
 
-  const cx = state.posX * canvas.width;
-  const cy = state.posY * canvas.height;
-
+function drawLayer(ctx, img, canvasW, canvasH, posX, posY, scale, rotate) {
+  const h = canvasH * scale;
+  const w = h * (img.naturalWidth / img.naturalHeight);
+  const cx = posX * canvasW;
+  const cy = posY * canvasH;
   ctx.save();
   ctx.translate(cx, cy);
-  ctx.rotate(state.rotate * Math.PI / 180);
-  ctx.drawImage(state.charImg, -charW / 2, -charH / 2, charW, charH);
+  ctx.rotate(rotate * Math.PI / 180);
+  ctx.drawImage(img, -w / 2, -h / 2, w, h);
   ctx.restore();
 }
 
 // ==========================================
-// スライダー操作
+// スライダー (操作対象レイヤーに反映)
 // ==========================================
 function setupSliders() {
   dom.scaleSlider.addEventListener('input', () => {
-    state.scale = parseInt(dom.scaleSlider.value) / 100;
+    const v = parseInt(dom.scaleSlider.value) / 100;
+    if (state.activeLayer === 'chara') state.charScale = v;
+    else state.fgScale = v;
     dom.scaleVal.textContent = dom.scaleSlider.value + '%';
     scheduleRender();
   });
 
   dom.rotateSlider.addEventListener('input', () => {
-    state.rotate = parseInt(dom.rotateSlider.value);
-    dom.rotateVal.textContent = state.rotate + '°';
+    const v = parseInt(dom.rotateSlider.value);
+    if (state.activeLayer === 'chara') state.charRotate = v;
+    else state.fgRotate = v;
+    dom.rotateVal.textContent = v + '°';
     scheduleRender();
   });
 
   dom.resetBtn.addEventListener('click', () => {
-    state.posX   = 0.5;
-    state.posY   = 0.6;
-    state.scale  = 0.5;
-    state.rotate = 0;
+    if (state.activeLayer === 'chara') {
+      state.charPosX = 0.5; state.charPosY = 0.6;
+      state.charScale = 0.5; state.charRotate = 0;
+    } else {
+      state.fgPosX = 0.5; state.fgPosY = 0.5;
+      state.fgScale = 0.8; state.fgRotate = 0;
+    }
     syncSlidersToState();
     scheduleRender();
   });
 
-  // クロマキー調整
-  dom.chromaThreshold.addEventListener('input', () => {
-    dom.chromaThresholdVal.textContent = dom.chromaThreshold.value;
-    applyChromaKey();
+  // クロマキースライダー (キャラ)
+  dom.charaChromaThreshold.addEventListener('input', () => {
+    dom.charaChromaThresholdVal.textContent = dom.charaChromaThreshold.value;
+    applyChromaKey('chara');
   });
-  dom.chromaFeather.addEventListener('input', () => {
-    dom.chromaFeatherVal.textContent = dom.chromaFeather.value;
-    applyChromaKey();
+  dom.charaChromaFeather.addEventListener('input', () => {
+    dom.charaChromaFeatherVal.textContent = dom.charaChromaFeather.value;
+    applyChromaKey('chara');
+  });
+
+  // クロマキースライダー (手前素材)
+  dom.fgChromaThreshold.addEventListener('input', () => {
+    dom.fgChromaThresholdVal.textContent = dom.fgChromaThreshold.value;
+    applyChromaKey('fg');
+  });
+  dom.fgChromaFeather.addEventListener('input', () => {
+    dom.fgChromaFeatherVal.textContent = dom.fgChromaFeather.value;
+    applyChromaKey('fg');
   });
 }
 
 function syncSlidersToState() {
-  dom.scaleSlider.value  = Math.round(state.scale * 100);
-  dom.scaleVal.textContent = dom.scaleSlider.value + '%';
-  dom.rotateSlider.value = state.rotate;
-  dom.rotateVal.textContent = state.rotate + '°';
+  const scale  = state.activeLayer === 'chara' ? state.charScale  : state.fgScale;
+  const rotate = state.activeLayer === 'chara' ? state.charRotate : state.fgRotate;
+  dom.scaleSlider.value     = Math.round(scale * 100);
+  dom.scaleVal.textContent  = dom.scaleSlider.value + '%';
+  dom.rotateSlider.value    = rotate;
+  dom.rotateVal.textContent = rotate + '°';
 }
 
 // ==========================================
@@ -405,25 +551,26 @@ function syncSlidersToState() {
 function setupCanvasInteraction() {
   const wrap = dom.canvasWrap;
 
-  // --- マウス ドラッグ ---
+  // --- マウスドラッグ ---
   let dragging = false;
   let dragStartX, dragStartY, dragStartPosX, dragStartPosY;
 
   wrap.addEventListener('mousedown', (e) => {
-    if (!state.charImg) return;
+    if (!activeLayerImg()) return;
     dragging = true;
     dragStartX    = e.clientX;
     dragStartY    = e.clientY;
-    dragStartPosX = state.posX;
-    dragStartPosY = state.posY;
+    dragStartPosX = state.activeLayer === 'chara' ? state.charPosX : state.fgPosX;
+    dragStartPosY = state.activeLayer === 'chara' ? state.charPosY : state.fgPosY;
     e.preventDefault();
   });
 
   window.addEventListener('mousemove', (e) => {
     if (!dragging) return;
     const rect = dom.canvas.getBoundingClientRect();
-    state.posX = clamp01(dragStartPosX + (e.clientX - dragStartX) / rect.width);
-    state.posY = clamp01(dragStartPosY + (e.clientY - dragStartY) / rect.height);
+    const nx = clamp01(dragStartPosX + (e.clientX - dragStartX) / rect.width);
+    const ny = clamp01(dragStartPosY + (e.clientY - dragStartY) / rect.height);
+    setActiveLayerPos(nx, ny);
     scheduleRender();
   });
 
@@ -431,69 +578,78 @@ function setupCanvasInteraction() {
 
   // --- マウスホイール: 拡大縮小 ---
   wrap.addEventListener('wheel', (e) => {
-    if (!state.charImg) return;
+    if (!activeLayerImg()) return;
     e.preventDefault();
     const delta = e.deltaY > 0 ? -0.03 : 0.03;
-    state.scale = Math.max(0.05, Math.min(3.0, state.scale + delta));
+    const cur = state.activeLayer === 'chara' ? state.charScale : state.fgScale;
+    const next = Math.max(0.05, Math.min(3.0, cur + delta));
+    if (state.activeLayer === 'chara') state.charScale = next;
+    else state.fgScale = next;
     syncSlidersToState();
     scheduleRender();
   }, { passive: false });
 
   // --- タッチ ---
-  let singleStart     = null;
-  let touchStartPosX  = 0, touchStartPosY = 0;
-  let pinchStartDist  = null, pinchStartAngle = null;
+  let singleStart = null, touchStartPosX = 0, touchStartPosY = 0;
+  let pinchStartDist = null, pinchStartAngle = null;
   let pinchStartScale = null, pinchStartRotate = null;
 
   wrap.addEventListener('touchstart', (e) => {
     e.preventDefault();
     if (e.touches.length === 1) {
       singleStart    = { x: e.touches[0].clientX, y: e.touches[0].clientY };
-      touchStartPosX = state.posX;
-      touchStartPosY = state.posY;
+      touchStartPosX = state.activeLayer === 'chara' ? state.charPosX : state.fgPosX;
+      touchStartPosY = state.activeLayer === 'chara' ? state.charPosY : state.fgPosY;
       pinchStartDist = null;
     } else if (e.touches.length === 2) {
       singleStart     = null;
       pinchStartDist  = touchDist(e.touches[0], e.touches[1]);
       pinchStartAngle = touchAngle(e.touches[0], e.touches[1]);
-      pinchStartScale = state.scale;
-      pinchStartRotate = state.rotate;
+      pinchStartScale  = state.activeLayer === 'chara' ? state.charScale  : state.fgScale;
+      pinchStartRotate = state.activeLayer === 'chara' ? state.charRotate : state.fgRotate;
     }
   }, { passive: false });
 
   wrap.addEventListener('touchmove', (e) => {
     e.preventDefault();
-    if (!state.charImg) return;
+    if (!activeLayerImg()) return;
 
     if (e.touches.length === 1 && singleStart) {
       const rect = dom.canvas.getBoundingClientRect();
-      state.posX = clamp01(touchStartPosX + (e.touches[0].clientX - singleStart.x) / rect.width);
-      state.posY = clamp01(touchStartPosY + (e.touches[0].clientY - singleStart.y) / rect.height);
+      const nx = clamp01(touchStartPosX + (e.touches[0].clientX - singleStart.x) / rect.width);
+      const ny = clamp01(touchStartPosY + (e.touches[0].clientY - singleStart.y) / rect.height);
+      setActiveLayerPos(nx, ny);
       scheduleRender();
 
     } else if (e.touches.length === 2 && pinchStartDist !== null) {
       const dist  = touchDist(e.touches[0], e.touches[1]);
       const angle = touchAngle(e.touches[0], e.touches[1]);
-      state.scale  = Math.max(0.05, Math.min(3.0, pinchStartScale * (dist / pinchStartDist)));
-      state.rotate = pinchStartRotate + (angle - pinchStartAngle) * (180 / Math.PI);
+      const newScale  = Math.max(0.05, Math.min(3.0, pinchStartScale * (dist / pinchStartDist)));
+      const newRotate = pinchStartRotate + (angle - pinchStartAngle) * (180 / Math.PI);
+      if (state.activeLayer === 'chara') { state.charScale = newScale; state.charRotate = newRotate; }
+      else                               { state.fgScale   = newScale; state.fgRotate   = newRotate; }
       syncSlidersToState();
       scheduleRender();
     }
   }, { passive: false });
 
   wrap.addEventListener('touchend', (e) => {
-    if (e.touches.length < 2) {
-      pinchStartDist = null;
-    }
-    if (e.touches.length === 0) {
-      singleStart = null;
-    }
+    if (e.touches.length < 2) pinchStartDist = null;
+    if (e.touches.length === 0) singleStart = null;
   });
 }
 
+function activeLayerImg() {
+  return state.activeLayer === 'chara' ? state.charImg : state.fgImg;
+}
+
+function setActiveLayerPos(x, y) {
+  if (state.activeLayer === 'chara') { state.charPosX = x; state.charPosY = y; }
+  else                               { state.fgPosX   = x; state.fgPosY   = y; }
+}
+
 function touchDist(t1, t2) {
-  const dx = t1.clientX - t2.clientX, dy = t1.clientY - t2.clientY;
-  return Math.sqrt(dx * dx + dy * dy);
+  return Math.sqrt((t1.clientX - t2.clientX) ** 2 + (t1.clientY - t2.clientY) ** 2);
 }
 
 function touchAngle(t1, t2) {
@@ -534,20 +690,16 @@ async function doExport() {
   let count = 0;
 
   try {
-    // SNS用: 長辺1920px以内
     if (snsJpg || snsPng) {
       const canvas = buildExportCanvas(1920);
-      if (snsJpg) { await dlCanvas(canvas, `ohav_maker_${ts}.jpg`,       'image/jpeg', 0.92); count++; }
-      if (snsPng) { await dlCanvas(canvas, `ohav_maker_${ts}.png`,       'image/png');         count++; }
+      if (snsJpg) { await dlCanvas(canvas, `ohav_maker_${ts}.jpg`,  'image/jpeg', 0.92); count++; }
+      if (snsPng) { await dlCanvas(canvas, `ohav_maker_${ts}.png`,  'image/png');         count++; }
     }
-
-    // 印刷・高画質: 背景原寸フル解像度
     if (printPng) {
       const canvas = buildExportCanvas(Infinity);
       await dlCanvas(canvas, `ohav_maker_${ts}_print.png`, 'image/png');
       count++;
     }
-
     showToast(`${count}ファイルを保存しました！`);
   } catch (err) {
     showToast('保存に失敗しました', true);
@@ -560,12 +712,10 @@ async function doExport() {
 }
 
 function buildExportCanvas(maxSide) {
-  let w = state.bgImg.naturalWidth;
-  let h = state.bgImg.naturalHeight;
+  let w = state.bgImg.naturalWidth, h = state.bgImg.naturalHeight;
   if (Math.max(w, h) > maxSide) {
     const r = maxSide / Math.max(w, h);
-    w = Math.round(w * r);
-    h = Math.round(h * r);
+    w = Math.round(w * r); h = Math.round(h * r);
   }
 
   const canvas = document.createElement('canvas');
@@ -576,19 +726,12 @@ function buildExportCanvas(maxSide) {
 
   // 背景
   ctx.drawImage(state.bgImg, 0, 0, w, h);
-
   // キャラ
-  if (state.charImg) {
-    const charH = h * state.scale;
-    const charW = charH * (state.charImg.naturalWidth / state.charImg.naturalHeight);
-    const cx = state.posX * w;
-    const cy = state.posY * h;
-    ctx.save();
-    ctx.translate(cx, cy);
-    ctx.rotate(state.rotate * Math.PI / 180);
-    ctx.drawImage(state.charImg, -charW / 2, -charH / 2, charW, charH);
-    ctx.restore();
-  }
+  if (state.charImg) drawLayer(ctx, state.charImg, w, h,
+    state.charPosX, state.charPosY, state.charScale, state.charRotate);
+  // 手前素材
+  if (state.fgImg) drawLayer(ctx, state.fgImg, w, h,
+    state.fgPosX, state.fgPosY, state.fgScale, state.fgRotate);
 
   return canvas;
 }
@@ -598,8 +741,7 @@ function dlCanvas(canvas, filename, mimeType, quality) {
     canvas.toBlob((blob) => {
       const url = URL.createObjectURL(blob);
       const a   = document.createElement('a');
-      a.href     = url;
-      a.download = filename;
+      a.href = url; a.download = filename;
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
@@ -612,25 +754,25 @@ function dlCanvas(canvas, filename, mimeType, quality) {
 // ==========================================
 // UI ヘルパー
 // ==========================================
-function showBadge(typeClass, icon, text) {
-  dom.detectionBadge.className = `detection-badge visible ${typeClass}`;
-  dom.detectionIcon.textContent = icon;
-  dom.detectionText.textContent = text;
+function showBadge(badgeEl, iconEl, textEl, typeClass, icon, text) {
+  badgeEl.className = `detection-badge visible ${typeClass}`;
+  iconEl.textContent = icon;
+  textEl.textContent = text;
 }
 
-function hideBadge() {
-  dom.detectionBadge.className = 'detection-badge';
+function hideBadge(badgeEl) {
+  badgeEl.className = 'detection-badge';
 }
 
-function showAiProgress() {
-  dom.aiProgressWrap.classList.add('visible');
-  dom.aiProgressBar.style.width = '0%';
-  dom.aiProgressStatus.textContent = 'AI準備中...';
-  dom.aiProgressTime.textContent = '計算中...';
+function showAiProgress(wrap, bar, status, time) {
+  wrap.classList.add('visible');
+  bar.style.width = '0%';
+  status.textContent = 'AI準備中...';
+  time.textContent   = '計算中...';
 }
 
-function hideAiProgress() {
-  dom.aiProgressWrap.classList.remove('visible');
+function hideAiProgress(wrap) {
+  wrap.classList.remove('visible');
 }
 
 // ==========================================
@@ -674,7 +816,6 @@ function canvasToImage(canvas) {
 }
 
 function colorDist(r1, g1, b1, r2, g2, b2) {
-  // 知覚的重み付きユークリッド距離
   const dr = r1 - r2, dg = g1 - g2, db = b1 - b2;
   return Math.sqrt(2 * dr * dr + 4 * dg * dg + 3 * db * db);
 }
@@ -701,7 +842,6 @@ function rgbToHex(r, g, b) {
 }
 
 function getTimestamp() {
-  const d = new Date();
-  const p = n => String(n).padStart(2, '0');
-  return `${d.getFullYear()}${p(d.getMonth() + 1)}${p(d.getDate())}_${p(d.getHours())}${p(d.getMinutes())}`;
+  const d = new Date(), p = n => String(n).padStart(2, '0');
+  return `${d.getFullYear()}${p(d.getMonth()+1)}${p(d.getDate())}_${p(d.getHours())}${p(d.getMinutes())}`;
 }

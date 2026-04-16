@@ -369,6 +369,69 @@ body::before {
 }
 
 /* ==========================================
+   省略OKバッジ
+   ========================================== */
+.optional-badge {
+  font-size: 0.65rem;
+  font-weight: 600;
+  color: var(--color-text-subtle);
+  background: rgba(100, 116, 139, 0.15);
+  border: 1px solid rgba(100, 116, 139, 0.3);
+  border-radius: 999px;
+  padding: 2px 8px;
+  vertical-align: middle;
+  margin-left: 6px;
+}
+
+/* ==========================================
+   レイヤー切り替えトグル
+   ========================================== */
+.layer-toggle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 14px;
+  flex-wrap: wrap;
+}
+
+.layer-toggle-label {
+  font-size: 0.75rem;
+  color: var(--color-text-muted);
+  font-weight: 600;
+  flex-shrink: 0;
+}
+
+.layer-btn {
+  padding: 6px 16px;
+  border: 1px solid var(--color-border);
+  border-radius: 999px;
+  background: var(--color-bg-card2);
+  color: var(--color-text-muted);
+  font-family: inherit;
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all var(--transition);
+}
+
+.layer-btn:hover:not(:disabled) {
+  border-color: var(--color-primary);
+  color: var(--color-primary-light);
+}
+
+.layer-btn.active {
+  background: var(--gradient-primary);
+  border-color: transparent;
+  color: white;
+  box-shadow: 0 2px 10px rgba(168, 85, 247, 0.35);
+}
+
+.layer-btn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+/* ==========================================
    Canvas Preview Area
    ========================================== */
 .canvas-wrap {
