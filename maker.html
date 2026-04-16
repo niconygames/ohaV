@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="背景素材とキャラ素材を簡単合成！おはVメーカー by おはVサーチ！">
+  <title>簡単合成！おはVメーカー</title>
+  <link rel="icon" href="ClipForge.ico">
+  <link rel="apple-touch-icon" href="ClipForge.ico">
+  <link rel="stylesheet" href="maker.css">
+</head>
+<body>
+  <div id="toast" class="toast"></div>
+
+  <header class="site-header">
+    <div class="header-inner">
+      <a href="index.html" class="header-back">← 戻る</a>
+      <div>
+        <h1 class="site-title">✨ おはVメーカー</h1>
+        <p class="site-subtitle">背景×キャラ かんたん合成ツール</p>
+      </div>
+    </div>
+  </header>
+
+  <main class="container">
+
+    <!-- STEP 1: 背景素材 -->
+    <section class="card" id="section-bg">
+      <div class="section-header">
+        <span class="step-badge">1</span>
+        <h2 class="section-title">背景素材をアップロード</h2>
+      </div>
+
+      <div class="upload-zone" id="bg-upload-zone">
+        <input type="file" id="bg-file-input" accept="image/*">
+        <div class="upload-placeholder">
+          <span class="upload-icon">🖼️</span>
+          <p class="upload-text">タップまたはドラッグ&ドロップ</p>
+          <p class="upload-sub">PNG / JPG / WEBP など</p>
+        </div>
+        <img id="bg-preview" class="upload-preview" alt="背景プレビュー">
+        <p class="upload-change-hint">タップで変更</p>
+      </div>
+    </section>
+
+    <!-- STEP 2: キャラ素材 -->
+    <section class="card" id="section-chara">
+      <div class="section-header">
+        <span class="step-badge">2</span>
+        <h2 class="section-title">キャラ素材をアップロード</h2>
+      </div>
+
+      <div class="upload-zone" id="chara-upload-zone">
+        <input type="file" id="chara-file-input" accept="image/*">
+        <div class="upload-placeholder">
+          <span class="upload-icon">🐱</span>
+          <p class="upload-text">タップまたはドラッグ&ドロップ</p>
+          <p class="upload-sub">透過PNG / クロマキー / 背景ありどれでもOK</p>
+        </div>
+        <img id="chara-preview" class="upload-preview" alt="キャラプレビュー">
+        <p class="upload-change-hint">タップで変更</p>
+      </div>
+
+      <!-- 自動判定結果バッジ -->
+      <div id="detection-badge" class="detection-badge">
+        <span id="detection-icon"></span>
+        <span id="detection-text"></span>
+      </div>
+
+      <!-- AI進捗バー -->
+      <div id="ai-progress-wrap" class="ai-progress-wrap">
+        <div class="ai-progress-label">
+          <span id="ai-progress-status">AI背景除去中...</span>
+          <span id="ai-progress-time" class="ai-progress-time">計算中...</span>
+        </div>
+        <div class="ai-progress-bar-track">
+          <div id="ai-progress-bar" class="ai-progress-bar"></div>
+        </div>
+      </div>
+
+      <!-- クロマキー調整 -->
+      <div id="chroma-controls" class="chroma-controls">
+        <label>
+          色の許容範囲（しきい値）
+          <span id="chroma-threshold-val">80</span>
+        </label>
+        <input type="range" id="chroma-threshold" min="10" max="180" value="80" step="5">
+        <label>
+          境界ぼかし
+          <span id="chroma-feather-val">2</span>
+        </label>
+        <input type="range" id="chroma-feather" min="0" max="8" value="2" step="1">
+      </div>
+    </section>
+
+    <!-- STEP 3: キャンバスプレビュー & 操作 -->
+    <section class="card" id="section-canvas">
+      <div class="section-header">
+        <span class="step-badge">3</span>
+        <h2 class="section-title">位置・サイズ・回転を調整</h2>
+      </div>
+
+      <div class="canvas-wrap" id="canvas-wrap">
+        <canvas id="maker-canvas"></canvas>
+        <div class="canvas-placeholder" id="canvas-placeholder">
+          <span class="ph-icon">🎨</span>
+          <span>背景とキャラをアップロードすると<br>プレビューが表示されます</span>
+        </div>
+      </div>
+      <p class="canvas-hint">ドラッグ：移動　ピンチ：拡大縮小　2本指回転</p>
+
+      <div class="controls-grid" id="controls-grid">
+        <div class="control-item">
+          <div class="control-label">
+            <span>🔍 拡大縮小</span>
+            <span id="scale-val">100%</span>
+          </div>
+          <input type="range" id="scale-slider" min="5" max="300" value="100" step="1">
+        </div>
+        <div class="control-item">
+          <div class="control-label">
+            <span>🔄 回転</span>
+            <span id="rotate-val">0°</span>
+          </div>
+          <input type="range" id="rotate-slider" min="-180" max="180" value="0" step="1">
+        </div>
+      </div>
+
+      <div class="controls-reset">
+        <button id="reset-btn" class="btn-reset">位置・サイズをリセット</button>
+      </div>
+    </section>
+
+    <!-- STEP 4: 出力 -->
+    <section class="card" id="section-export">
+      <div class="section-header">
+        <span class="step-badge">4</span>
+        <h2 class="section-title">合成して保存！</h2>
+      </div>
+
+      <div class="export-options">
+        <!-- SNS用 -->
+        <div class="export-group">
+          <p class="export-group-title">📱 SNS用（X / Instagram）</p>
+          <div class="export-checkboxes">
+            <label class="export-check">
+              <input type="checkbox" id="export-sns-jpg" checked>
+              JPG
+            </label>
+            <label class="export-check">
+              <input type="checkbox" id="export-sns-png">
+              PNG
+            </label>
+          </div>
+          <p class="export-group-desc">長辺1920px以内・投稿に最適なサイズ</p>
+        </div>
+
+        <!-- 印刷・高画質用 -->
+        <div class="export-group print-group">
+          <p class="export-group-title">🖨️ 印刷・高画質用（カード・グッズ向け）</p>
+          <div class="export-checkboxes">
+            <label class="export-check">
+              <input type="checkbox" id="export-print-png">
+              高画質PNG（フル解像度）
+            </label>
+          </div>
+          <p class="export-group-desc">背景素材の原寸で出力。A4・300dpi印刷対応</p>
+        </div>
+      </div>
+
+      <button id="export-btn" class="btn-export" disabled>
+        <span>🎨 合成して保存！</span>
+      </button>
+      <p class="export-note" id="export-note">背景とキャラをアップロードすると保存できます</p>
+    </section>
+
+  </main>
+
+  <footer class="site-footer">
+    <p class="footer-text">
+      <a href="index.html">← おはVサーチ！に戻る</a> &nbsp;|&nbsp;
+      <a href="https://x.com/niconygames" target="_blank" rel="noopener">@niconygames</a>
+    </p>
+    <p class="footer-copy">© niconygames — AI背景除去: <a href="https://github.com/imgly/background-removal-js" target="_blank" rel="noopener" style="color:inherit">@imgly/background-removal</a> (AGPL-3.0)</p>
+  </footer>
+
+  <!-- @imgly/background-removal CDN (ES Module) -->
+  <script type="module" src="maker.js"></script>
+</body>
+</html>

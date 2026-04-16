@@ -766,6 +766,84 @@ body::before {
 }
 
 /* ==========================================
+   おはVメーカー 誘導ボタン
+   ========================================== */
+.btn-maker-link {
+  display: block;
+  text-decoration: none;
+  border: 1px solid rgba(168, 85, 247, 0.4);
+  border-radius: var(--radius-lg);
+  background: linear-gradient(135deg, rgba(168, 85, 247, 0.12), rgba(236, 72, 153, 0.08));
+  box-shadow: 0 4px 20px rgba(168, 85, 247, 0.15);
+  transition: all var(--transition);
+  position: relative;
+  overflow: hidden;
+  animation: fadeInUp 0.4s ease both;
+  animation-delay: 0.08s;
+}
+
+.btn-maker-link::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 2px;
+  background: var(--gradient-primary);
+  border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+}
+
+.btn-maker-link:hover {
+  border-color: rgba(168, 85, 247, 0.7);
+  box-shadow: 0 6px 28px rgba(168, 85, 247, 0.28);
+  transform: translateY(-2px);
+}
+
+.btn-maker-inner {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 16px 18px;
+}
+
+.btn-maker-icon {
+  font-size: 2rem;
+  flex-shrink: 0;
+  filter: drop-shadow(0 0 6px rgba(168, 85, 247, 0.6));
+}
+
+.btn-maker-text {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  flex: 1;
+}
+
+.btn-maker-title {
+  font-size: 1rem;
+  font-weight: 800;
+  background: var(--gradient-primary);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  letter-spacing: 0.03em;
+}
+
+.btn-maker-sub {
+  font-size: 0.73rem;
+  color: var(--color-text-muted);
+}
+
+.btn-maker-arrow {
+  font-size: 1.3rem;
+  color: var(--color-primary);
+  flex-shrink: 0;
+  transition: transform var(--transition);
+}
+
+.btn-maker-link:hover .btn-maker-arrow {
+  transform: translateX(4px);
+}
+
+/* ==========================================
    Animations
    ========================================== */
 @keyframes fadeInUp {
