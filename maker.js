@@ -169,8 +169,8 @@ async function onBgSelected(file) {
   }
   dom.canvas.width  = w;
   dom.canvas.height = h;
-  // aspect-ratio を明示することで max-height と組み合わせてもアスペクト比を保持
-  dom.canvas.style.aspectRatio = `${w} / ${h}`;
+  // 次フレームでレイアウト確定後にpx指定（アスペクト比を確実に保持）
+  requestAnimationFrame(fitCanvasDisplay);
 
   // 環境色を抽出（背景が変わるたびに更新）
   state.colorSync.envColor = extractEnvColor(img, 0.5, 0.6);
@@ -974,6 +974,34 @@ function showToast(message, isError = false) {
   if (toastTimer) clearTimeout(toastTimer);
   toastTimer = setTimeout(() => toast.classList.remove('show'), 2500);
 }
+
+// ==========================================
+// キャンバス表示サイズ調整（アスペクト比保持）
+// ==========================================
+function fitCanvasDisplay() {
+  const cW = dom.canvas.width;
+  const cH = dom.canvas.height;
+  if (!cW || !cH) return;
+
+  const wrapW = dom.canvasWrap.clientWidth || 640;
+  const ratio  = cW / cH;
+  const maxH   = 320;
+
+  let dW = wrapW;
+  let dH = Math.round(dW / ratio);
+
+  if (dH > maxH) {
+    dH = maxH;
+    dW = Math.round(dH * ratio);
+  }
+
+  dom.canvas.style.width  = dW + 'px';
+  dom.canvas.style.height = dH + 'px';
+}
+
+window.addEventListener('resize', () => {
+  if (state.bgImg) fitCanvasDisplay();
+});
 
 // ==========================================
 // ユーティリティ

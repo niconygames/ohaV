@@ -168,13 +168,14 @@
       <div class="controls-reset">
         <button id="reset-btn" class="btn-reset">位置・サイズをリセット</button>
       </div>
-    </section>
 
-    <!-- 自動なじませ -->
-    <section class="card" id="section-colorsync">
-      <div class="section-header">
+      <!-- 区切り線 -->
+      <div class="inner-divider"></div>
+
+      <!-- 自動なじませ（同一カード内） -->
+      <div class="colorsync-header">
         <span class="section-icon">🎨</span>
-        <h2 class="section-title">自動なじませ</h2>
+        <h3 class="section-title">自動なじませ</h3>
         <label class="toggle-switch" title="自動なじませ ON/OFF">
           <input type="checkbox" id="colorsync-toggle">
           <span class="toggle-track"></span>
@@ -182,8 +183,6 @@
       </div>
 
       <div id="colorsync-body" class="colorsync-body" hidden>
-
-        <!-- プリセット -->
         <div class="preset-buttons">
           <button class="btn-preset active" data-preset="auto">✨ 自動</button>
           <button class="btn-preset" data-preset="morning">☀️ 朝</button>
@@ -192,7 +191,6 @@
           <button class="btn-preset" data-preset="night">🌙 夜</button>
         </div>
 
-        <!-- 強度スライダー -->
         <div class="control-item">
           <div class="control-label">
             <span>馴染ませ強度</span>
@@ -201,7 +199,6 @@
           <input type="range" id="colorsync-strength" min="0" max="100" value="30" step="1">
         </div>
 
-        <!-- 詳細設定 -->
         <details class="colorsync-details">
           <summary>詳細設定</summary>
           <div class="colorsync-details-body">
@@ -219,7 +216,6 @@
             </div>
           </div>
         </details>
-
       </div>
     </section>
 

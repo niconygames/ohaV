@@ -449,10 +449,8 @@ body::before {
 
 #maker-canvas {
   display: block;
-  width: 100%;
-  height: auto;
-  max-height: 340px;
   border-radius: var(--radius-md);
+  /* 実サイズはJSでpx指定（アスペクト比保持のため） */
 }
 
 .canvas-placeholder {
@@ -534,6 +532,22 @@ body::before {
   font-size: 0.72rem;
   color: var(--color-text-subtle);
   margin-top: 8px;
+}
+
+/* ==========================================
+   カード内区切り線・自動なじませヘッダー
+   ========================================== */
+.inner-divider {
+  height: 1px;
+  background: var(--color-border);
+  margin: 20px 0;
+}
+
+.colorsync-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 14px;
 }
 
 /* ==========================================
