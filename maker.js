@@ -11,6 +11,14 @@ const state = {
   // 背景
   bgImg: null,
 
+  // 背景カラー (レイヤー0: 背景画像より下)
+  bgColor: {
+    type:         null,   // null | 'solid' | 'gradient'
+    solid:        null,   // '#FFFFFF' など
+    gradient:     null,   // { from: '#FFCC99', to: '#FF99CC', name: '朝焼け' }
+    gradStrength: 75,     // 0〜100
+  },
+
   // キャラ (レイヤー2)
   charImg:      null,
   charType:     null,
@@ -118,6 +126,14 @@ document.addEventListener('DOMContentLoaded', () => {
   dom.exportSnsPng   = document.getElementById('export-sns-png');
   dom.exportPrintPng = document.getElementById('export-print-png');
 
+  // 背景カラー
+  dom.bgSolidSwatches   = document.getElementById('bg-solid-swatches');
+  dom.bgGradSwatches    = document.getElementById('bg-grad-swatches');
+  dom.bgGradStrengthRow = document.getElementById('bg-grad-strength-row');
+  dom.bgGradStrength    = document.getElementById('bg-grad-strength');
+  dom.bgGradStrengthVal = document.getElementById('bg-grad-strength-val');
+  dom.bgColorClearBtn   = document.getElementById('bg-color-clear-btn');
+
   setupUploadZone(dom.bgUploadZone,  dom.bgFileInput,  onBgSelected);
   setupUploadZone(dom.charaUploadZone, dom.charaFileInput, onCharaSelected);
   setupUploadZone(dom.fgUploadZone,  dom.fgFileInput,  onFgSelected);
@@ -125,6 +141,7 @@ document.addEventListener('DOMContentLoaded', () => {
   setupSliders();
   setupCanvasInteraction();
   setupColorSync();
+  setupBgColorPicker();
   setupExport();
 });
 
@@ -474,15 +491,19 @@ function scheduleRender() {
 
 function render() {
   const canvas = dom.canvas;
-  if (!state.bgImg || canvas.width === 0) return;
+  const hasBg = state.bgImg || state.bgColor.type;
+  if (!hasBg || canvas.width === 0) return;
 
   const ctx = canvas.getContext('2d');
   ctx.imageSmoothingEnabled = true;
   ctx.imageSmoothingQuality = 'high';
   ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-  // レイヤー1: 背景
-  ctx.drawImage(state.bgImg, 0, 0, canvas.width, canvas.height);
+  // レイヤー0: 背景カラー（背景画像の下に敷く）
+  drawBgColor(ctx, canvas.width, canvas.height);
+
+  // レイヤー1: 背景画像
+  if (state.bgImg) ctx.drawImage(state.bgImg, 0, 0, canvas.width, canvas.height);
 
   // レイヤー2: キャラ
   if (state.charImg) {
@@ -694,6 +715,161 @@ function touchAngle(t1, t2) {
 function clamp01(v) { return Math.max(0, Math.min(1, v)); }
 
 // ==========================================
+// 背景カラーピッカー
+// ==========================================
+
+const BG_SOLIDS = [
+  { name: '純白',           hex: '#FFFFFF' },
+  { name: 'オフホワイト',   hex: '#FAF6F0' },
+  { name: 'ライトピンク',   hex: '#FFE4E8' },
+  { name: 'ベビーピンク',   hex: '#FFC1D0' },
+  { name: 'パステルピンク', hex: '#FFB6C1' },
+  { name: 'ラベンダー',     hex: '#E6D9FF' },
+  { name: 'ライトパープル', hex: '#D8B4E0' },
+  { name: 'ミントグリーン', hex: '#B2F2D8' },
+  { name: 'ライトブルー',   hex: '#B0E0FF' },
+  { name: 'パステルブルー', hex: '#A1D4FF' },
+  { name: 'レモンイエロー', hex: '#FFF7C2' },
+  { name: 'パステルオレンジ', hex: '#FFE4C2' },
+];
+
+const BG_GRADS = [
+  { name: '朝焼け',         from: '#FFCC99', to: '#FF99CC' },
+  { name: 'ピンク系',       from: '#FFE4E1', to: '#FFB6C1' },
+  { name: 'ブルー系',       from: '#B0E0E6', to: '#A1CAF1' },
+  { name: 'パープル系',     from: '#E6E6FA', to: '#D8BFD8' },
+  { name: 'イエロー→ピンク', from: '#FFFACD', to: '#FFC0CB' },
+  { name: 'ミント→ブルー',  from: '#B2F2C2', to: '#B0E0E6' },
+];
+
+function setupBgColorPicker() {
+  // --- 単色スウォッチ生成 ---
+  BG_SOLIDS.forEach(({ name, hex }) => {
+    const btn = document.createElement('button');
+    btn.className = 'bg-swatch';
+    btn.title = name;
+    btn.style.background = hex;
+    btn.dataset.type = 'solid';
+    btn.dataset.value = hex;
+    btn.addEventListener('click', () => {
+      selectBgColor('solid', hex, null);
+    });
+    dom.bgSolidSwatches.appendChild(btn);
+  });
+
+  // --- グラデスウォッチ生成 ---
+  BG_GRADS.forEach((grad) => {
+    const btn = document.createElement('button');
+    btn.className = 'bg-swatch';
+    btn.title = grad.name;
+    btn.style.background = `linear-gradient(to bottom, ${grad.from}, ${grad.to})`;
+    btn.dataset.type = 'gradient';
+    btn.dataset.from = grad.from;
+    btn.dataset.to   = grad.to;
+    btn.addEventListener('click', () => {
+      selectBgColor('gradient', null, grad);
+    });
+    dom.bgGradSwatches.appendChild(btn);
+  });
+
+  // --- グラデ強さスライダー ---
+  dom.bgGradStrength.addEventListener('input', () => {
+    state.bgColor.gradStrength = parseInt(dom.bgGradStrength.value);
+    dom.bgGradStrengthVal.textContent = dom.bgGradStrength.value + '%';
+    scheduleRender();
+  });
+
+  // --- クリアボタン ---
+  dom.bgColorClearBtn.addEventListener('click', () => {
+    clearBgColor();
+  });
+}
+
+function selectBgColor(type, solid, gradient) {
+  state.bgColor.type     = type;
+  state.bgColor.solid    = solid;
+  state.bgColor.gradient = gradient;
+
+  // スウォッチの選択状態を更新
+  document.querySelectorAll('.bg-swatch').forEach(btn => btn.classList.remove('selected'));
+  const key = type === 'solid'
+    ? `[data-value="${solid}"]`
+    : `[data-from="${gradient.from}"][data-to="${gradient.to}"]`;
+  const selected = document.querySelector(`.bg-swatch${key}`);
+  if (selected) selected.classList.add('selected');
+
+  // グラデスライダー表示切替
+  dom.bgGradStrengthRow.classList.toggle('visible', type === 'gradient');
+
+  // 背景画像がなければキャンバスサイズを初期化
+  initDefaultCanvas();
+
+  scheduleRender();
+  updateExportBtn();
+}
+
+function clearBgColor() {
+  state.bgColor.type     = null;
+  state.bgColor.solid    = null;
+  state.bgColor.gradient = null;
+  document.querySelectorAll('.bg-swatch').forEach(btn => btn.classList.remove('selected'));
+  dom.bgGradStrengthRow.classList.remove('visible');
+
+  // 背景画像もなければプレースホルダーを戻す
+  if (!state.bgImg) {
+    dom.canvasPlaceholder.style.display = '';
+  }
+
+  scheduleRender();
+  updateExportBtn();
+}
+
+// 背景画像もカラーもない → デフォルト1080×1080でキャンバス初期化
+function initDefaultCanvas() {
+  if (!state.bgImg && dom.canvas.width === 0) {
+    dom.canvas.width  = 1080;
+    dom.canvas.height = 1080;
+    requestAnimationFrame(fitCanvasDisplay);
+    dom.canvasPlaceholder.style.display = 'none';
+  }
+}
+
+// ==========================================
+// 背景カラー描画
+// ==========================================
+function drawBgColor(ctx, w, h) {
+  const { type, solid, gradient, gradStrength } = state.bgColor;
+  if (!type) return;
+
+  if (type === 'solid') {
+    ctx.fillStyle = solid;
+    ctx.fillRect(0, 0, w, h);
+
+  } else if (type === 'gradient') {
+    // strength: 0→50%彩度(薄め)〜100→100%彩度(強め)
+    const strength = 0.5 + (gradStrength / 100) * 0.5;
+    const fromColor = mixColorWithWhite(gradient.from, strength);
+    const toColor   = mixColorWithWhite(gradient.to,   strength);
+    const grad = ctx.createLinearGradient(0, 0, 0, h); // 上から下
+    grad.addColorStop(0, fromColor);
+    grad.addColorStop(1, toColor);
+    ctx.fillStyle = grad;
+    ctx.fillRect(0, 0, w, h);
+  }
+}
+
+// 16進数カラーをホワイトと混合（strength: 0.0〜1.0）
+function mixColorWithWhite(hex, strength) {
+  const r = parseInt(hex.slice(1, 3), 16);
+  const g = parseInt(hex.slice(3, 5), 16);
+  const b = parseInt(hex.slice(5, 7), 16);
+  const mr = Math.round(r * strength + 255 * (1 - strength));
+  const mg = Math.round(g * strength + 255 * (1 - strength));
+  const mb = Math.round(b * strength + 255 * (1 - strength));
+  return `rgb(${mr},${mg},${mb})`;
+}
+
+// ==========================================
 // 自動なじませ
 // ==========================================
 
@@ -844,11 +1020,12 @@ function setupExport() {
 }
 
 function updateExportBtn() {
-  const ready = !!(state.bgImg && state.charImg);
+  const hasBg  = !!(state.bgImg || state.bgColor.type);
+  const ready  = !!(hasBg && state.charImg);
   dom.exportBtn.disabled = !ready;
   dom.exportNote.textContent = ready
     ? '形式を選んで保存しましょう'
-    : '背景とキャラをアップロードすると保存できます';
+    : '背景（画像 or カラー）とキャラをアップロードすると保存できます';
 }
 
 async function doExport() {
@@ -890,10 +1067,18 @@ async function doExport() {
 }
 
 function buildExportCanvas(maxSide) {
-  let w = state.bgImg.naturalWidth, h = state.bgImg.naturalHeight;
-  if (Math.max(w, h) > maxSide) {
-    const r = maxSide / Math.max(w, h);
-    w = Math.round(w * r); h = Math.round(h * r);
+  let w, h;
+  if (state.bgImg) {
+    w = state.bgImg.naturalWidth;
+    h = state.bgImg.naturalHeight;
+    if (Math.max(w, h) > maxSide) {
+      const r = maxSide / Math.max(w, h);
+      w = Math.round(w * r); h = Math.round(h * r);
+    }
+  } else {
+    // 背景画像なし → 1080×1080 (SNS正方形)
+    w = Math.min(1080, maxSide);
+    h = Math.min(1080, maxSide);
   }
 
   const canvas = document.createElement('canvas');
@@ -902,8 +1087,11 @@ function buildExportCanvas(maxSide) {
   ctx.imageSmoothingEnabled = true;
   ctx.imageSmoothingQuality = 'high';
 
-  // 背景
-  ctx.drawImage(state.bgImg, 0, 0, w, h);
+  // レイヤー0: 背景カラー
+  drawBgColor(ctx, w, h);
+
+  // レイヤー1: 背景画像
+  if (state.bgImg) ctx.drawImage(state.bgImg, 0, 0, w, h);
   // キャラ
   if (state.charImg) {
     drawLayer(ctx, state.charImg, w, h,

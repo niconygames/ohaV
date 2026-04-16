@@ -116,6 +116,37 @@
         </div>
 
       </div>
+
+      <!-- 🎨 背景カラーパネル -->
+      <div class="inner-divider"></div>
+      <div class="bg-color-section" id="bg-color-section">
+        <div class="bg-color-header">
+          <span class="section-icon">🎨</span>
+          <span class="bg-color-title">背景カラー <span class="optional-badge">背景画像の代わりに使用OK</span></span>
+          <button class="bg-color-clear-btn" id="bg-color-clear-btn">✕ クリア</button>
+        </div>
+        <div class="bg-color-groups">
+          <div class="bg-color-group">
+            <p class="bg-color-group-label">単色</p>
+            <div class="bg-swatches" id="bg-solid-swatches"></div>
+          </div>
+          <div class="bg-color-group">
+            <p class="bg-color-group-label">グラデーション</p>
+            <div class="bg-swatches" id="bg-grad-swatches"></div>
+          </div>
+        </div>
+        <div class="bg-grad-strength-row" id="bg-grad-strength-row">
+          <div class="control-label">
+            <span>グラデの強さ</span>
+            <span id="bg-grad-strength-val">75%</span>
+          </div>
+          <div class="bg-strength-slider-wrap">
+            <span class="bg-strength-edge">薄め</span>
+            <input type="range" id="bg-grad-strength" min="0" max="100" value="75" class="bg-strength-slider">
+            <span class="bg-strength-edge">強め</span>
+          </div>
+        </div>
+      </div>
     </section>
 
     <!-- STEP 4: キャンバスプレビュー & 操作 -->
