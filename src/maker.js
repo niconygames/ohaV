@@ -1,7 +1,5 @@
 import { removeBackground } from '@imgly/background-removal';
 
-// モデルファイル（ONNX/WASM）はバンドルされないため実行時にCDNから取得する
-const IMGLY_ASSETS_CDN = 'https://cdn.jsdelivr.net/npm/@imgly/background-removal@1.7.0/dist/';
 
 /* ==========================================
    おはVメーカー - maker.js (ES Module)
@@ -410,7 +408,6 @@ async function applyAiRemoval(file, layer) {
 
   try {
     const resultBlob = await removeBackground(file, {
-      publicPath: IMGLY_ASSETS_CDN,
       progress: (key, current, total) => {
         if (!total) return;
         const pct = Math.min(99, Math.round((current / total) * 100));
