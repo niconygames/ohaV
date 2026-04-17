@@ -1,5 +1,5 @@
 
-
+import { removeBackground } from '@imgly/background-removal';
 
 /* ==========================================
    おはVメーカー - maker.js (ES Module)
@@ -407,10 +407,6 @@ async function applyAiRemoval(file, layer) {
   let inferenceStartTime = null;
 
   try {
-    const { removeBackground } = await import(
-      "https://cdn.jsdelivr.net/npm/@imgly/background-removal@1.7.0/dist/index.mjs"
-    );
-
     const resultBlob = await removeBackground(file, {
       progress: (key, current, total) => {
         if (!total) return;
