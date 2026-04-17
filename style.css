@@ -899,6 +899,29 @@ body::before {
   transform: translateX(4px);
 }
 
+@media (prefers-color-scheme: light) {
+  .btn-maker-link {
+    border: 1.5px solid rgba(168, 85, 247, 0.55);
+    background: linear-gradient(135deg, rgba(168, 85, 247, 0.13), rgba(236, 72, 153, 0.09));
+    box-shadow: 0 4px 20px rgba(168, 85, 247, 0.2), 0 1px 4px rgba(0, 0, 0, 0.06);
+  }
+
+  .btn-maker-link:hover {
+    border-color: rgba(168, 85, 247, 0.8);
+    box-shadow: 0 6px 28px rgba(168, 85, 247, 0.32), 0 1px 4px rgba(0, 0, 0, 0.08);
+  }
+
+  /* ライトモードのシマーは紫系の光で */
+  .btn-maker-link::after {
+    background: linear-gradient(
+      105deg,
+      transparent 30%,
+      rgba(168, 85, 247, 0.12) 50%,
+      transparent 70%
+    );
+  }
+}
+
 /* ==========================================
    Animations
    ========================================== */
