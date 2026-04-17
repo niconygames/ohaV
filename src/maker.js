@@ -1,5 +1,8 @@
 import { removeBackground } from '@imgly/background-removal';
 
+// モデルファイル（ONNX/WASM）はバンドルされないため実行時にCDNから取得する
+const IMGLY_ASSETS_CDN = 'https://cdn.jsdelivr.net/npm/@imgly/background-removal@1.7.0/dist/';
+
 /* ==========================================
    おはVメーカー - maker.js (ES Module)
    レイヤー構成: 背景 → キャラ → 手前素材
@@ -243,7 +246,7 @@ async function onCharaSelected(file) {
 
   } else {
     showBadge(dom.charaDetectionBadge, dom.charaDetectionIcon, dom.charaDetectionText,
-      'type-ai', '🤖', 'AI背景除去を実行します...');
+      'type-ai', '🤖', 'AI背景除去を開始します（初回はモデルDLで数分かかる場合があります）');
     await applyAiRemoval(file, 'chara');
     updateExportBtn();
   }
@@ -289,7 +292,7 @@ async function onFgSelected(file) {
 
   } else {
     showBadge(dom.fgDetectionBadge, dom.fgDetectionIcon, dom.fgDetectionText,
-      'type-ai', '🤖', 'AI背景除去を実行します...');
+      'type-ai', '🤖', 'AI背景除去を開始します（初回はモデルDLで数分かかる場合があります）');
     await applyAiRemoval(file, 'fg');
     dom.layerBtnFg.disabled = false;
   }
@@ -407,13 +410,14 @@ async function applyAiRemoval(file, layer) {
 
   try {
     const resultBlob = await removeBackground(file, {
+      publicPath: IMGLY_ASSETS_CDN,
       progress: (key, current, total) => {
         if (!total) return;
         const pct = Math.min(99, Math.round((current / total) * 100));
         progressBar.style.width = pct + '%';
 
         if (key.startsWith('fetch:')) {
-          progressStatus.textContent = 'AIモデル読み込み中...';
+          progressStatus.textContent = 'AIモデルをダウンロード中... (初回のみ・しばらくお待ちください)';
           progressTime.textContent   = `${pct}%`;
         } else if (key === 'compute:inference') {
           if (!inferenceStarted) {
