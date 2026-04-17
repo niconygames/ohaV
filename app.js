@@ -60,8 +60,10 @@ async function loadAnniversary() {
 
     if (tomorrowEntry) {
       if (tomorrowNameEl) tomorrowNameEl.textContent = tomorrowEntry.name;
-      if (tomorrowTagsEl) renderAnniversaryTags(tomorrowTagsEl, tomorrowEntry.tags);
+      if (tomorrowTagsEl) renderAnniversaryTags(tomorrowTagsEl, tomorrowEntry.tags, false);
       if (tomorrowGroup) tomorrowGroup.style.display = '';
+      const divider = document.getElementById('tomorrow-divider');
+      if (divider) divider.style.display = '';
     } else {
       if (tomorrowNameEl) tomorrowNameEl.textContent = '特別な日';
     }
@@ -83,7 +85,7 @@ function formatDate(date) {
   return `${y}年${m}月${d}日（${dn}）`;
 }
 
-function renderAnniversaryTags(container, tags) {
+function renderAnniversaryTags(container, tags, checked = true) {
   container.innerHTML = '';
   tags.forEach(tag => {
     const label = document.createElement('label');
@@ -92,7 +94,7 @@ function renderAnniversaryTags(container, tags) {
     const cb = document.createElement('input');
     cb.type = 'checkbox';
     cb.value = tag;
-    cb.checked = true;
+    cb.checked = checked;
     cb.addEventListener('change', updateCopyPreview);
 
     const span = document.createElement('span');

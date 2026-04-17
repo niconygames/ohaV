@@ -41,16 +41,19 @@
       </div>
 
       <div class="tags-area">
-        <div class="tags-group">
-          <p class="tags-group-label">記念日タグ</p>
-          <div id="anniversary-tags" class="tags-list">
-            <!-- JSで動的生成 -->
+        <div class="tags-row">
+          <div class="tags-group">
+            <p class="tags-group-label">記念日タグ</p>
+            <div id="anniversary-tags" class="tags-list">
+              <!-- JSで動的生成 -->
+            </div>
           </div>
-        </div>
-        <div class="tags-group" id="tomorrow-tags-group" style="display:none;">
-          <p class="tags-group-label">明日の記念日タグ</p>
-          <div id="tomorrow-anniversary-tags" class="tags-list">
-            <!-- JSで動的生成 -->
+          <div class="tags-row-divider" id="tomorrow-divider" style="display:none;"></div>
+          <div class="tags-group" id="tomorrow-tags-group" style="display:none;">
+            <p class="tags-group-label">明日の記念日タグ</p>
+            <div id="tomorrow-anniversary-tags" class="tags-list">
+              <!-- JSで動的生成 -->
+            </div>
           </div>
         </div>
 
