@@ -29,15 +29,27 @@
         <h2 class="section-title">今日は何の日？</h2>
       </div>
       <p id="today-date" class="today-date">読み込み中...</p>
-      <div class="anniversary-box">
-        <p class="anniversary-label">今日の記念日</p>
-        <p id="anniversary-name" class="anniversary-name">...</p>
+      <div class="anniversary-row">
+        <div class="anniversary-box">
+          <p class="anniversary-label">今日の記念日</p>
+          <p id="anniversary-name" class="anniversary-name">...</p>
+        </div>
+        <div class="anniversary-box anniversary-box--tomorrow">
+          <p class="anniversary-label">明日の記念日</p>
+          <p id="tomorrow-name" class="anniversary-name">...</p>
+        </div>
       </div>
 
       <div class="tags-area">
         <div class="tags-group">
           <p class="tags-group-label">記念日タグ</p>
           <div id="anniversary-tags" class="tags-list">
+            <!-- JSで動的生成 -->
+          </div>
+        </div>
+        <div class="tags-group" id="tomorrow-tags-group" style="display:none;">
+          <p class="tags-group-label">明日の記念日タグ</p>
+          <div id="tomorrow-anniversary-tags" class="tags-list">
             <!-- JSで動的生成 -->
           </div>
         </div>

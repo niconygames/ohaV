@@ -19,6 +19,10 @@ async function loadAnniversary() {
   const day = today.getDate();
   const key = `${month}/${day}`;
 
+  const tomorrow = new Date(today);
+  tomorrow.setDate(today.getDate() + 1);
+  const tomorrowKey = `${tomorrow.getMonth() + 1}/${tomorrow.getDate()}`;
+
   // 日付表示
   const dateEl = document.getElementById('today-date');
   if (dateEl) {
@@ -46,6 +50,20 @@ async function loadAnniversary() {
         note.textContent = '今日の記念日データはありません';
         tagsEl.appendChild(note);
       }
+    }
+
+    // 明日の記念日
+    const tomorrowEntry = data[tomorrowKey];
+    const tomorrowNameEl = document.getElementById('tomorrow-name');
+    const tomorrowTagsEl = document.getElementById('tomorrow-anniversary-tags');
+    const tomorrowGroup = document.getElementById('tomorrow-tags-group');
+
+    if (tomorrowEntry) {
+      if (tomorrowNameEl) tomorrowNameEl.textContent = tomorrowEntry.name;
+      if (tomorrowTagsEl) renderAnniversaryTags(tomorrowTagsEl, tomorrowEntry.tags);
+      if (tomorrowGroup) tomorrowGroup.style.display = '';
+    } else {
+      if (tomorrowNameEl) tomorrowNameEl.textContent = '特別な日';
     }
   } catch (e) {
     const nameEl = document.getElementById('anniversary-name');
