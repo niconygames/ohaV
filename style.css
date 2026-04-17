@@ -895,6 +895,9 @@ body::before {
     box-shadow: 0 6px 20px rgba(45, 212, 191, 0.35), 0 2px 6px rgba(0, 0, 0, 0.1);
   }
 
+  .btn-maker-link::before {
+    background: linear-gradient(90deg, #2DD4BF, #38bdf8);
+  }
 }
 
 /* ==========================================
