@@ -389,7 +389,7 @@ async function applyChromaKey(layer) {
 // ==========================================
 // AI背景除去 (layer: 'chara' | 'fg')
 // ==========================================
-const IMGLY_CDN = 'https://cdn.jsdelivr.net/npm/@imgly/background-removal@1.4.5/dist/';
+const IMGLY_CDN = 'https://cdn.jsdelivr.net/npm/@imgly/background-removal@1.7.0/dist/';
 let _removeBackground = null;
 
 async function loadRemoveBackground() {
