@@ -20,8 +20,8 @@ const state = {
     solid:        null,   // '#FFFFFF' など
     gradient:     null,   // { from: '#FFCC99', to: '#FF99CC', name: '朝焼け' }
     gradStrength: 75,     // 0〜100
-    canvasW:      1920,   // 背景画像なし時のキャンバス幅 (16:9デフォ)
-    canvasH:      1080,   // 背景画像なし時のキャンバス高さ (16:9デフォ)
+    canvasW:      1080,   // 背景画像なし時のキャンバス幅 (9:16デフォ)
+    canvasH:      1920,   // 背景画像なし時のキャンバス高さ (9:16デフォ)
   },
 
   // キャラ (レイヤー2)
@@ -231,6 +231,7 @@ async function onCharaSelected(file) {
     showBadge(dom.charaDetectionBadge, dom.charaDetectionIcon, dom.charaDetectionText,
       'type-transparent', '✅', '透過PNG — そのまま使用します');
     state.charImg = img;
+    initDefaultCanvas();
     scheduleRender();
     updateExportBtn();
 
@@ -386,6 +387,7 @@ async function applyChromaKey(layer) {
   } else {
     state.fgImg = result;
   }
+  initDefaultCanvas();
   scheduleRender();
 }
 
@@ -448,6 +450,7 @@ async function applyAiRemoval(file, layer) {
     }
 
     showBadge(badgeEl, badgeIcon, badgeText, 'type-ai', '✅', 'AI背景除去 完了！配置してください');
+    initDefaultCanvas();
     scheduleRender();
     updateExportBtn();
 
@@ -487,10 +490,10 @@ function scheduleRender() {
 
 function render() {
   const canvas = dom.canvas;
-  const hasBg = state.bgImg || state.bgColor.type;
+  const hasContent = state.bgImg || state.bgColor.type || state.charImg || state.fgImg;
 
   // 描画するものがない場合はキャンバスをクリア
-  if (!hasBg || canvas.width === 0) {
+  if (!hasContent || canvas.width === 0) {
     if (canvas.width > 0) {
       const ctx = canvas.getContext('2d');
       ctx.clearRect(0, 0, canvas.width, canvas.height);
