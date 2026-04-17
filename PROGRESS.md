@@ -84,9 +84,10 @@
   - 予約投稿ユーザー向けに翌日の記念日名＋タグを参照可能
   - 明日のタグはデータがある日のみ「明日の記念日タグ」グループとして表示
 - [x] Vite への移行と AI 背景除去機能の修正
-  - CDN (`@imgly/background-removal`) からの動的インポートが動作しない問題を、Vite + npm パッケージ化により解決
-  - ディレクトリ構成の整理 (`src/`, `public/`) および `vite.config.js` の導入
-  - マルチページ構成 (index.html, maker.html) のバンドル設定完了
+  - [x] CDN Dynamic Import方式への移行によりCloudflare Pages本番環境のビルド容量肥大化・パス解決問題を解消（Viteによるバンドルをスキップ）
+  - [x] `public/_headers` (COEP/COOP) の追加でSharedArrayBufferを有効化し、ONNXマルチスレッド推論を最適化
+  - [x] ディレクトリ構成の整理 (`src/`, `public/`) および `vite.config.js` の導入
+  - [x] マルチページ構成 (index.html, maker.html) のバンドル設定完了
 
 ## 次回やること
 - [ ] スマホ（iOS/Android）での動作検証・AI除去のパフォーマンス確認
