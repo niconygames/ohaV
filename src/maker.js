@@ -1,4 +1,4 @@
-import { removeBackground } from '@imgly/background-removal';
+
 
 
 /* ==========================================
@@ -407,8 +407,11 @@ async function applyAiRemoval(file, layer) {
   let inferenceStartTime = null;
 
   try {
+    const { removeBackground } = await import(
+      "https://cdn.jsdelivr.net/npm/@imgly/background-removal@1.7.0/dist/index.mjs"
+    );
+
     const resultBlob = await removeBackground(file, {
-      publicPath: "https://staticimgly.com/@imgly/background-removal-data/1.7.0/dist/",
       progress: (key, current, total) => {
         if (!total) return;
         const pct = Math.min(99, Math.round((current / total) * 100));
