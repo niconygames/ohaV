@@ -815,7 +815,7 @@ body::before {
   transition: all var(--transition);
   position: relative;
   overflow: hidden;
-  animation: fadeInUp 0.4s ease both;
+  animation: fadeInUp 0.4s ease backwards;
   animation-delay: 0.08s;
 }
 
