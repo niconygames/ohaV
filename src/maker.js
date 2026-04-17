@@ -408,6 +408,7 @@ async function applyAiRemoval(file, layer) {
 
   try {
     const resultBlob = await removeBackground(file, {
+      publicPath: "https://staticimgly.com/@imgly/background-removal-data/1.7.0/dist/",
       progress: (key, current, total) => {
         if (!total) return;
         const pct = Math.min(99, Math.round((current / total) * 100));
