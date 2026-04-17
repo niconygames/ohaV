@@ -394,7 +394,7 @@ let _removeBackground = null;
 
 async function loadRemoveBackground() {
   if (_removeBackground) return _removeBackground;
-  const mod = await import(`${IMGLY_CDN}background-removal.js`);
+  const mod = await import(`${IMGLY_CDN}index.mjs`);
   _removeBackground = mod.removeBackground;
   return _removeBackground;
 }
