@@ -8,7 +8,14 @@
       "Bash(curl -s \"https://raw.githubusercontent.com/nyanko3141592/InspirationCat/main/README.md\")",
       "Bash(curl -s \"https://raw.githubusercontent.com/nyanko3141592/InspirationCat/master/README.md\")",
       "Bash(curl -s \"https://api.github.com/repos/nyanko3141592/InspirationCat/contents/\")",
-      "Bash(git commit -m ' *)"
+      "Bash(git commit -m ' *)",
+      "WebFetch(domain:cdn.jsdelivr.net)",
+      "Bash(git commit -m 'fix: background-removal CDN バージョンを1.4.5→1.7.0に更新 *)",
+      "Bash(git commit -m 'fix: background-removal のインポートパスを index.mjs に修正 *)",
+      "Bash(gh repo *)",
+      "WebFetch(domain:github.com)",
+      "WebFetch(domain:raw.githubusercontent.com)",
+      "WebFetch(domain:api.github.com)"
     ]
   }
 }
