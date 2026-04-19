@@ -89,8 +89,17 @@
   - [x] ディレクトリ構成の整理 (`src/`, `public/`) および `vite.config.js` の導入
   - [x] マルチページ構成 (index.html, maker.html) のバンドル設定完了
 
+---
+
+## 2026-04-19
+
+### 完了
+- [x] Twitter埋め込み動画の修正
+  - [x] `index.html` の埋め込みURLを `twitter.com` に復元（`widgets.js` が `x.com` では変換処理をスキップしてしまう問題を解消）
+  - [x] `public/_headers` (COOP/COEP) の適用範囲を `/maker` ページのみに限定（トップページの外部リソース読み込みブロックを解消）
+  - [x] 埋め込みポストに `data-theme="dark"` を追加し、サイトデザインと統合
+
 ## 次回やること
 - [ ] スマホ（iOS/Android）での動作検証・AI除去のパフォーマンス確認
-- [ ] Cloudflare Pages にデプロイ（リポジトリ接続 → masterブランチ指定するだけ）
 - [ ] PWAアイコンをPNG化（.icoだとAndroidで出ないことがある）
 - [ ] その他フィードバックによる調整
